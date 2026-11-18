@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { AboutPage, siteMeta } from "@/components/ainnmkk/site";
+export const Route = createFileRoute("/ideology")({ head: () => ({ meta: [{ title: siteMeta.ideology.title }, { name: "description", content: siteMeta.ideology.description }, { property: "og:title", content: siteMeta.ideology.title }, { property: "og:description", content: siteMeta.ideology.description }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }), component: () => <AboutPage page="ideology" /> });

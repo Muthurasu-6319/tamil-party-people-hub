@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { MembershipPage, siteMeta } from "@/components/ainnmkk/site";
+export const Route = createFileRoute("/membership")({ head: () => ({ meta: [{ title: siteMeta.membership.title }, { name: "description", content: siteMeta.membership.description }, { property: "og:title", content: siteMeta.membership.title }, { property: "og:description", content: siteMeta.membership.description }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }), component: MembershipPage });

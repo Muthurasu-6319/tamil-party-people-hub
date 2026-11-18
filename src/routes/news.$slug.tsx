@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { DirectoryPage } from "@/components/ainnmkk/site";
+export const Route = createFileRoute("/news/$slug")({ head: () => ({ meta: [{ title: "AINNMK news" }, { name: "description", content: "Official news and announcements from Agila India Nam Nadu Makkal Katchi." }, { property: "og:title", content: "AINNMK news" }, { property: "og:description", content: "Official news and announcements from Agila India Nam Nadu Makkal Katchi." }, { property: "og:type", content: "article" }, { name: "twitter:card", content: "summary_large_image" }] }), component: () => <DirectoryPage kind="news" /> });

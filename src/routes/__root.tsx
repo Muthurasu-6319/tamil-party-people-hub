@@ -8,10 +8,21 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Toaster } from "@/components/ui/sonner";
+
+type Language = "ta" | "en";
+type LanguageContextValue = { language: Language; setLanguage: (value: Language) => void };
+const LanguageContext = createContext<LanguageContextValue | null>(null);
+
+export function useSiteLanguage() {
+  const value = useContext(LanguageContext);
+  if (!value) throw new Error("Language is only available inside the AINNMK site.");
+  return value;
+}
 
 function NotFoundComponent() {
   return (
@@ -81,11 +92,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "அகில இந்திய நம் நாடு மக்கள் கட்சி | AINNMK" },
+      { name: "description", content: "அகில இந்திய நம் நாடு மக்கள் கட்சியின் அதிகாரப்பூர்வ இணையதளம். ஒற்றுமை, சமத்துவம், மக்கள் நலன்." },
+      { name: "author", content: "அகில இந்திய நம் நாடு மக்கள் கட்சி" },
+      { property: "og:title", content: "அகில இந்திய நம் நாடு மக்கள் கட்சி | AINNMK" },
+      { property: "og:description", content: "ஒற்றுமை, சமத்துவம், மக்கள் நலன் என்ற நோக்கத்துடன்." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
@@ -96,6 +107,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700;800&display=swap" },
     ],
   }),
   shellComponent: RootShell,
@@ -106,7 +120,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ta">
       <head>
         <HeadContent />
       </head>
@@ -120,11 +134,36 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const [language, updateLanguage] = useState<Language>("ta");
+  const setLanguage = useCallback((value: Language) => {
+    updateLanguage(value);
+    try {
+      window.localStorage.setItem("ainnmkk-language", value);
+    } catch {
+      // Language selection still works if browser storage is unavailable.
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("ainnmkk-language");
+      if (saved === "ta" || saved === "en") updateLanguage(saved);
+    } catch {
+      // Keep the Tamil default when browser storage is unavailable.
+    }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <LanguageContext.Provider value={{ language, setLanguage }}>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+        <Toaster position="top-right" />
+      </LanguageContext.Provider>
     </QueryClientProvider>
   );
 }

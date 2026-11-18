@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { DirectoryPage } from "@/components/ainnmkk/site";
+export const Route = createFileRoute("/press-releases")({ head: () => ({ meta: [{ title: "அதிகாரப்பூர்வ பத்திரிகை வெளியீடுகள் | AINNMK" }, { name: "description", content: "அகில இந்திய நம் நாடு மக்கள் கட்சியின் அதிகாரப்பூர்வ பத்திரிகை வெளியீடுகள்." }, { property: "og:title", content: "அதிகாரப்பூர்வ பத்திரிகை வெளியீடுகள் | AINNMK" }, { property: "og:description", content: "அகில இந்திய நம் நாடு மக்கள் கட்சியின் அதிகாரப்பூர்வ பத்திரிகை வெளியீடுகள்." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }), component: () => <DirectoryPage kind="news" /> });

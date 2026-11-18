@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { ContactPage, siteMeta } from "@/components/ainnmkk/site";
+export const Route = createFileRoute("/contact")({ head: () => ({ meta: [{ title: siteMeta.contact.title }, { name: "description", content: siteMeta.contact.description }, { property: "og:title", content: siteMeta.contact.title }, { property: "og:description", content: siteMeta.contact.description }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }), component: ContactPage });

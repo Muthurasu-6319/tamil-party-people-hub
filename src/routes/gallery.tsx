@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { DirectoryPage, siteMeta } from "@/components/ainnmkk/site";
+export const Route = createFileRoute("/gallery")({ head: () => ({ meta: [{ title: siteMeta.gallery.title }, { name: "description", content: siteMeta.gallery.description }, { property: "og:title", content: siteMeta.gallery.title }, { property: "og:description", content: siteMeta.gallery.description }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }), component: () => <DirectoryPage kind="gallery" /> });

@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { DirectoryPage, siteMeta } from "@/components/ainnmkk/site";
+export const Route = createFileRoute("/events")({ head: () => ({ meta: [{ title: siteMeta.events.title }, { name: "description", content: siteMeta.events.description }, { property: "og:title", content: siteMeta.events.title }, { property: "og:description", content: siteMeta.events.description }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }), component: () => <DirectoryPage kind="events" /> });

@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { DirectoryPage } from "@/components/ainnmkk/site";
+export const Route = createFileRoute("/leadership/$leaderId")({ head: () => ({ meta: [{ title: "AINNMK leadership profiles" }, { name: "description", content: "Verified leadership profiles of Agila India Nam Nadu Makkal Katchi." }, { property: "og:title", content: "AINNMK leadership profiles" }, { property: "og:description", content: "Verified leadership profiles of Agila India Nam Nadu Makkal Katchi." }, { property: "og:type", content: "profile" }, { name: "twitter:card", content: "summary_large_image" }] }), component: () => <DirectoryPage kind="leadership" /> });

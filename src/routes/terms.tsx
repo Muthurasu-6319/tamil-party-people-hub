@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { PolicyPage, siteMeta } from "@/components/ainnmkk/site";
+export const Route = createFileRoute("/terms")({ head: () => ({ meta: [{ title: siteMeta.terms.title }, { name: "description", content: siteMeta.terms.description }, { property: "og:title", content: siteMeta.terms.title }, { property: "og:description", content: siteMeta.terms.description }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }), component: () => <PolicyPage type="terms" /> });

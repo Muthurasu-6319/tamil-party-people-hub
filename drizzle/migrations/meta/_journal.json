@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794980364091,
+      "tag": "0000_create_public_intake_forms",
+      "breakpoints": true
+    }
+  ]
+}
