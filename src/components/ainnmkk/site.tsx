@@ -1,35 +1,50 @@
-import React, { useState, useMemo } from "react";
-import { Link } from "@tanstack/react-router";
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import { Link, useLocation } from "@tanstack/react-router";
 import {
   ArrowDown,
   ArrowRight,
+  ArrowUpRight,
   Award,
   BookOpen,
   CalendarDays,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   ExternalLink,
   Eye,
+  Facebook,
   Flag,
   Globe,
+  GraduationCap,
   HandHeart,
   HeartHandshake,
+  Home,
+  Instagram,
   Leaf,
   Mail,
   MapPin,
+  Megaphone,
   Menu,
   Newspaper,
+  Pause,
   Phone,
+  Play,
+  Scale,
   Search,
   Send,
   Shield,
   ShieldCheck,
   Sparkles,
   Sprout,
+  Twitter,
   Users,
   UserCheck,
+  Volume2,
+  VolumeX,
   X,
+  Youtube,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -70,6 +85,124 @@ export const partyLogoSrc = partyLogoImg;
 
 type TextPair = { ta: string; en: string };
 
+export type NavSubItem = {
+  href: string;
+  label: TextPair;
+  description: TextPair;
+  icon: React.ComponentType<{ className?: string }>;
+};
+
+export type NavGroupItem = {
+  type: "group";
+  label: TextPair;
+  items: NavSubItem[];
+};
+
+export type NavLinkItem = {
+  type: "link";
+  href: string;
+  label: TextPair;
+};
+
+export type HeaderNavItem = NavGroupItem | NavLinkItem;
+
+export const headerNavConfig: HeaderNavItem[] = [
+  {
+    type: "link",
+    href: "/",
+    label: { ta: "Home", en: "Home" },
+  },
+  {
+    type: "group",
+    label: { ta: "About Us", en: "About Us" },
+    items: [
+      {
+        href: "/about",
+        label: { ta: "எங்களைப் பற்றி", en: "About Us" },
+        description: { ta: "கட்சியின் வரலாறு மற்றும் பார்வை", en: "Party history, vision & mission" },
+        icon: BookOpen,
+      },
+      {
+        href: "/organization",
+        label: { ta: "கட்சி அமைப்பு", en: "Organization" },
+        description: { ta: "மாநில & மாவட்ட அணிகள்", en: "State & district committees" },
+        icon: Flag,
+      },
+    ],
+  },
+  {
+    type: "group",
+    label: { ta: "Leadership", en: "Leadership" },
+    items: [
+      {
+        href: "/leadership",
+        label: { ta: "தலைமை நிர்வாகிகள்", en: "Party Leaders" },
+        description: { ta: "நிறுவனத் தலைவர் மற்றும் தலைமை நிர்வாகிகள்", en: "Founder & key leaders" },
+        icon: Users,
+      },
+    ],
+  },
+  {
+    type: "group",
+    label: { ta: "Our Ideology", en: "Our Ideology" },
+    items: [
+      {
+        href: "/ideology",
+        label: { ta: "12 அடிப்படைக் கொள்கைகள்", en: "12 Principles" },
+        description: { ta: "நமது அடிப்படைக் கொள்கைகள்", en: "Core party principles" },
+        icon: Sprout,
+      },
+    ],
+  },
+  {
+    type: "group",
+    label: { ta: "News & Media", en: "News & Media" },
+    items: [
+      {
+        href: "/news",
+        label: { ta: "செய்திகள்", en: "Latest News" },
+        description: { ta: "கட்சியின் புதிய அறிவிப்புகள் & செய்திகள்", en: "Party news & announcements" },
+        icon: Newspaper,
+      },
+      {
+        href: "/press-releases",
+        label: { ta: "பத்திரிகை வெளியீடுகள்", en: "Press Releases" },
+        description: { ta: "அதிகாரப்பூர்வ பத்திரிகை அறிக்கைகள்", en: "Official press releases" },
+        icon: Newspaper,
+      },
+    ],
+  },
+  {
+    type: "group",
+    label: { ta: "Events", en: "Events" },
+    items: [
+      {
+        href: "/events",
+        label: { ta: "நிகழ்வுகள்", en: "Party Events" },
+        description: { ta: "மாநாடுகள் & களப்பணி", en: "Rallies & meets" },
+        icon: CalendarDays,
+      },
+    ],
+  },
+  {
+    type: "group",
+    label: { ta: "Gallery", en: "Gallery" },
+    items: [
+      {
+        href: "/gallery",
+        label: { ta: "படத்தொகுப்பு", en: "Photo Gallery" },
+        description: { ta: "புகைப்படங்கள் மற்றும் காணொளிகள்", en: "Photo & video archive" },
+        icon: Eye,
+      },
+    ],
+  },
+  {
+    type: "link",
+    href: "/contact",
+    label: { ta: "Contact", en: "Contact" },
+  },
+];
+
 const navItems: { href: string; label: TextPair }[] = [
   { href: "/about", label: { ta: "எங்களைப் பற்றி", en: "About" } },
   { href: "/leadership", label: { ta: "தலைமை", en: "Leadership" } },
@@ -81,6 +214,119 @@ const navItems: { href: string; label: TextPair }[] = [
   { href: "/membership", label: { ta: "உறுப்பினர் சேர்க்கை", en: "Membership" } },
   { href: "/contact", label: { ta: "தொடர்புக்கு", en: "Contact" } },
 ];
+
+function DesktopNavDropdown({
+  group,
+  language,
+  currentPath,
+}: {
+  group: NavGroupItem;
+  language: "ta" | "en";
+  currentPath: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const isChildActive = group.items.some(
+    (item) => currentPath === item.href || (item.href !== "/" && currentPath.startsWith(item.href))
+  );
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setOpen(false);
+    }, 180);
+  };
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [open]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        aria-haspopup="true"
+        className={`inline-flex items-center gap-0.5 2xl:gap-1 px-1.5 2xl:px-2.5 py-1 text-[11px] 2xl:text-xs font-semibold rounded-md transition-colors ${
+          isChildActive
+            ? "text-[#12883c] font-bold"
+            : open
+            ? "text-[#12883c] bg-slate-100"
+            : "text-slate-700 hover:text-[#12883c]"
+        }`}
+      >
+        <span>{group.label.en}</span>
+        <ChevronDown
+          className={`size-2.5 2xl:size-3 transition-transform duration-200 ${
+            open ? "rotate-180 text-[#12883c]" : "text-slate-400"
+          }`}
+        />
+      </button>
+
+      {open && (
+        <div
+          className="absolute left-0 top-full pt-1.5 z-50 min-w-56 animate-in fade-in-0 zoom-in-95 duration-150 origin-top"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          <div className="rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl ring-1 ring-black/5">
+            {group.items.map((sub) => {
+              const SubIcon = sub.icon;
+              const isActive = currentPath === sub.href;
+              return (
+                <Link
+                  key={sub.href}
+                  to={sub.href}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                    isActive
+                      ? "bg-emerald-50 text-[#12883c] font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-slate-900"
+                  }`}
+                >
+                  <SubIcon className={`size-3.5 shrink-0 ${isActive ? "text-[#12883c]" : "text-slate-400"}`} />
+                  <span>{language === "ta" ? sub.label.ta : sub.label.en}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function BrandMark({
   className = "size-12",
@@ -111,96 +357,153 @@ function Bilingual({ text, className = "" }: { text: TextPair; className?: strin
   return (
     <button
       aria-label={language === "ta" ? "Switch to English" : "தமிழில் காண்க"}
-      className={`inline-flex h-9 items-center gap-1.5 rounded-md border border-border/80 bg-background/80 px-3 text-xs font-bold transition-all hover:bg-muted ${className}`}
+      className={`inline-flex h-8 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 text-xs font-bold transition-all hover:bg-slate-100 text-slate-900 shadow-2xs ${className}`}
       onClick={() => setLanguage(language === "ta" ? "en" : "ta")}
       type="button"
     >
-      <Globe className="size-3.5 text-primary" />
-      <span>{language === "ta" ? text.ta : text.en}</span>
-      <ChevronDown aria-hidden="true" className="size-3.5 text-muted-foreground" />
+      <span>{language === "ta" ? "தமிழ்" : "English"}</span>
+      <ChevronDown aria-hidden="true" className="size-3 text-slate-600" />
     </button>
   );
 }
 
 export function SiteHeader() {
-  const { language } = useSiteLanguage();
+  const { language, setLanguage } = useSiteLanguage();
+  const location = useLocation();
+  const currentPath = location?.pathname || "";
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileExpandedGroups, setMobileExpandedGroups] = useState<Record<string, boolean>>({
+    "About Us": true,
+    "Leadership": false,
+    "Our Ideology": false,
+    "News & Media": false,
+    "Events": false,
+    "Gallery": false,
+  });
+
+  const toggleMobileGroup = (key: string) => {
+    setMobileExpandedGroups((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   return (
     <>
-      {/* Top Banner Ribbon */}
-      <div className="hidden min-h-8 items-center justify-between bg-emerald-950 px-6 py-1 text-[11px] font-medium text-emerald-100 sm:flex border-b border-emerald-900/50">
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 font-bold text-brand-yellow">
-            <Sparkles className="size-3 text-brand-yellow" />
-            AINNMK · 2008 முதல் மக்களின் நல்வாழ்விற்காக
+      {/* Top Banner Ribbon - Responsive, no mobile overflow */}
+      <div className="w-full min-h-9 bg-[#12883c] px-3 sm:px-6 xl:px-8 2xl:px-12 py-1 text-xs font-semibold text-white flex items-center justify-between border-b border-emerald-800/40 overflow-hidden">
+        <div className="flex items-center gap-2 truncate min-w-0 pr-2">
+          <span className="inline-flex items-center gap-1.5 font-bold text-amber-300 shrink-0">
+            <Megaphone className="size-3.5 fill-amber-300 text-amber-300 shrink-0" />
+            <span className="truncate">{language === "ta" ? "நம் தாய்நாடு – நம் குடும்பம்" : "Our Motherland – Our Family"}</span>
           </span>
-          <span className="text-emerald-400/40">|</span>
-          <span className="truncate">
-            {language === "ta"
-              ? "ஒற்றுமை • சமத்துவம் • மக்கள் நலன் — அகில இந்திய அளவில் உழவர் பெருமக்கள் இயக்கம்"
-              : "Unity • Equality • People’s Welfare — All India Movement for Grassroots Justice"}
+          <span className="text-white/40 hidden md:inline shrink-0">|</span>
+          <span className="text-white/95 hidden md:inline text-[11px] sm:text-xs truncate">
+            {language === "ta" ? "சமாதானம்  •  சமத்துவம்  •  மக்கள் நலம்" : "Peace  •  Equality  •  People's Welfare"}
           </span>
         </div>
-        <div className="flex items-center gap-4 text-emerald-200">
-          <a href="tel:+919444012345" className="flex items-center gap-1.5 hover:text-brand-yellow transition-colors">
-            <Phone className="size-3" />
-            +91 94440 12345
-          </a>
-          <span className="text-emerald-400/40">|</span>
-          <a href="mailto:contact@ainnmk.org" className="flex items-center gap-1.5 hover:text-brand-yellow transition-colors">
-            <Mail className="size-3" />
-            contact@ainnmk.org
-          </a>
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="hidden sm:flex items-center gap-2 text-white">
+            <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook" className="hover:text-amber-300 transition-colors">
+              <Facebook className="size-3.5" />
+            </a>
+            <a href="https://youtube.com" target="_blank" rel="noreferrer" aria-label="YouTube" className="hover:text-amber-300 transition-colors">
+              <Youtube className="size-3.5" />
+            </a>
+            <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="X" className="hover:text-amber-300 transition-colors">
+              <Twitter className="size-3.5" />
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" className="hover:text-amber-300 transition-colors">
+              <Instagram className="size-3.5" />
+            </a>
+          </div>
+          <button
+            type="button"
+            onClick={() => setLanguage(language === "ta" ? "en" : "ta")}
+            aria-label={language === "ta" ? "Switch to English" : "Switch to Tamil"}
+            className="rounded-full bg-white text-slate-900 px-2.5 py-0.5 text-[11px] sm:text-xs font-extrabold flex items-center gap-1 hover:bg-slate-100 shadow-xs transition-colors shrink-0"
+          >
+            <span>{language === "ta" ? "தமிழ்" : "English"}</span>
+            <ChevronDown className="size-3 text-slate-600" />
+          </button>
         </div>
       </div>
 
       {/* Main Navigation Header */}
-      <header className="sticky top-0 z-40 border-b border-border/80 bg-background/95 shadow-sm backdrop-blur-md">
-        <div className="mx-auto flex min-h-[76px] max-w-[1360px] items-center justify-between gap-4 px-4 sm:px-7 xl:px-10">
-          <Link aria-label="AINNMK Home" className="flex min-w-0 items-center gap-3 group" to="/">
-            <BrandMark className="size-12 sm:size-13 drop-shadow group-hover:scale-105 transition-transform" />
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-extrabold leading-snug text-foreground sm:text-base tracking-tight">
+      <header className="sticky top-0 z-40 w-full border-b border-slate-200/90 bg-white shadow-xs overflow-hidden">
+        <div className="w-full flex min-h-[64px] sm:min-h-[74px] items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 xl:px-8 2xl:px-12 max-w-full">
+          <Link aria-label="AINNMK Home" className="flex min-w-0 items-center gap-2 sm:gap-3 group shrink" to="/">
+            <BrandMark className="size-10 sm:size-12 drop-shadow-xs group-hover:scale-105 transition-transform shrink-0" />
+            <div className="min-w-0 flex flex-col justify-center">
+              <span className="block truncate text-xs sm:text-sm font-black leading-tight text-[#12883c] tracking-tight">
                 அகில இந்திய நம் நாடு மக்கள் கட்சி
               </span>
-              <span className="mt-0.5 block truncate text-[10px] font-semibold text-muted-foreground sm:text-[11px] tracking-wide">
-                Agila India Nam Nadu Makkal Katchi <span className="font-bold text-primary">· AINNMK</span>
+              <span className="mt-0.5 block truncate text-[9px] sm:text-[11px] font-black text-[#1e3a5f] tracking-wide uppercase">
+                Agila India Nam Nadu Makkal Katchi
               </span>
-            </span>
+            </div>
           </Link>
 
-          <nav aria-label="Main navigation" className="hidden items-center gap-5 xl:flex">
-            <Link className="text-xs font-bold text-foreground transition-colors hover:text-primary" to="/">
-              {language === "ta" ? "முகப்பு" : "Home"}
-            </Link>
-            {navItems.map((item) => (
-              <Link
-                className="text-xs font-semibold text-foreground/80 transition-colors hover:text-primary"
-                key={item.href}
-                to={item.href}
-              >
-                {language === "ta" ? item.label.ta : item.label.en}
-              </Link>
-            ))}
+          <nav aria-label="Main navigation" className="hidden items-center gap-1 2xl:gap-1.5 xl:flex shrink-0">
+            {headerNavConfig.map((item, idx) => {
+              if (item.type === "link") {
+                const isHome = item.href === "/";
+                const isActive = currentPath === item.href;
+                if (isHome) {
+                  return (
+                    <Link
+                      key={item.href}
+                      className={`rounded-full px-2.5 2xl:px-3.5 py-1 2xl:py-1.5 text-[11px] 2xl:text-xs font-bold inline-flex items-center gap-1 transition-all shadow-xs ${
+                        isActive
+                          ? "bg-[#12883c] text-white"
+                          : "text-slate-700 hover:text-[#12883c] hover:bg-slate-100"
+                      }`}
+                      to={item.href}
+                    >
+                      <Home className="size-3 2xl:size-3.5" />
+                      <span>Home</span>
+                    </Link>
+                  );
+                }
+                return (
+                  <Link
+                    key={item.href}
+                    className={`px-1.5 2xl:px-2.5 py-1 2xl:py-1.5 text-[11px] 2xl:text-xs font-semibold rounded-md transition-colors ${
+                      isActive
+                        ? "text-[#12883c] font-bold"
+                        : "text-slate-700 hover:text-[#12883c]"
+                    }`}
+                    to={item.href}
+                  >
+                    {item.label.en}
+                  </Link>
+                );
+              }
+              return (
+                <DesktopNavDropdown
+                  key={idx}
+                  group={item}
+                  language={language}
+                  currentPath={currentPath}
+                />
+              );
+            })}
           </nav>
 
           <div className="hidden shrink-0 items-center gap-3 xl:flex">
-            <Bilingual text={{ ta: "தமிழ்", en: "English" }} />
-            <Button asChild className="h-10 rounded-md px-5 text-xs font-bold shadow-sm bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button
+              asChild
+              className="h-8 2xl:h-9 rounded-full bg-[#fbbf24] hover:bg-[#f59e0b] px-3.5 2xl:px-5 text-[11px] 2xl:text-xs font-black shadow-xs text-slate-950 transition-transform hover:scale-105"
+            >
               <Link to="/membership">
-                {language === "ta" ? "கட்சியில் இணையுங்கள்" : "Join Party"}
-                <ArrowRight aria-hidden="true" className="ml-1.5 size-4" />
+                <span>Join Our Party</span>
+                <ArrowUpRight aria-hidden="true" className="ml-1 size-3.5 2xl:size-4" />
               </Link>
             </Button>
           </div>
 
           <div className="flex shrink-0 items-center gap-2 xl:hidden">
-            <Bilingual text={{ ta: "தமி", en: "EN" }} />
             <Button
               aria-expanded={menuOpen}
               aria-label={menuOpen ? "Close menu" : "Open menu"}
-              className="size-10 p-0"
+              className="size-9 sm:size-10 p-0 text-slate-800"
               onClick={() => setMenuOpen((open) => !open)}
               variant="outline"
             >
@@ -210,27 +513,76 @@ export function SiteHeader() {
         </div>
 
         {menuOpen ? (
-          <nav aria-label="Mobile navigation" className="grid gap-1 border-t border-border bg-background px-5 py-4 xl:hidden shadow-lg">
-            <Link
-              className="px-3 py-2.5 text-sm font-bold text-primary rounded-md hover:bg-muted"
-              onClick={() => setMenuOpen(false)}
-              to="/"
-            >
-              {language === "ta" ? "முகப்பு" : "Home"}
-            </Link>
-            {navItems.map((item) => (
-              <Link
-                className="px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted hover:text-primary rounded-md"
-                key={item.href}
-                onClick={() => setMenuOpen(false)}
-                to={item.href}
-              >
-                {language === "ta" ? item.label.ta : item.label.en}
-              </Link>
-            ))}
-            <Button asChild className="mt-3 w-full rounded-md font-bold" onClick={() => setMenuOpen(false)}>
+          <nav aria-label="Mobile navigation" className="grid gap-1 border-t border-border bg-background px-4 py-4 xl:hidden shadow-lg max-h-[calc(100vh-80px)] overflow-y-auto">
+            {headerNavConfig.map((item, idx) => {
+              if (item.type === "link") {
+                const isActive = currentPath === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    className={`px-3 py-2 text-sm font-semibold rounded-md transition-colors ${
+                      isActive
+                        ? "bg-emerald-50 text-[#12883c] font-bold"
+                        : "text-foreground hover:bg-muted hover:text-primary"
+                    }`}
+                    onClick={() => setMenuOpen(false)}
+                    to={item.href}
+                  >
+                    {item.label.en}
+                  </Link>
+                );
+              }
+
+              const isGroupOpen = mobileExpandedGroups[item.label.en] ?? false;
+              const isChildActive = item.items.some((sub) => currentPath === sub.href);
+
+              return (
+                <div key={idx} className="rounded-lg border border-border/60 bg-muted/20 my-1 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => toggleMobileGroup(item.label.en)}
+                    className={`flex w-full items-center justify-between px-3.5 py-2.5 text-sm font-bold transition-colors ${
+                      isChildActive ? "text-[#12883c]" : "text-foreground hover:text-primary"
+                    }`}
+                  >
+                    <span>{item.label.en}</span>
+                    <ChevronDown
+                      className={`size-4 transition-transform duration-200 ${
+                        isGroupOpen ? "rotate-180 text-[#12883c]" : "text-muted-foreground"
+                      }`}
+                    />
+                  </button>
+
+                  {isGroupOpen && (
+                    <div className="grid gap-1 px-2 pb-2 pt-0.5 border-t border-border/40">
+                      {item.items.map((sub) => {
+                        const SubIcon = sub.icon;
+                        const isActive = currentPath === sub.href;
+                        return (
+                          <Link
+                            key={sub.href}
+                            to={sub.href}
+                            onClick={() => setMenuOpen(false)}
+                            className={`flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-md transition-colors ${
+                              isActive
+                                ? "bg-[#12883c] text-white font-bold"
+                                : "text-foreground/85 hover:bg-muted hover:text-foreground"
+                            }`}
+                          >
+                            <SubIcon className={`size-3.5 shrink-0 ${isActive ? "text-white" : "text-[#12883c]"}`} />
+                            <span>{language === "ta" ? sub.label.ta : sub.label.en}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            <Button asChild className="mt-3 w-full rounded-full bg-[#fbbf24] hover:bg-[#f59e0b] text-slate-950 font-black" onClick={() => setMenuOpen(false)}>
               <Link to="/membership">
-                {language === "ta" ? "கட்சியில் இணையுங்கள் (Join Now)" : "Join Party Now"}
+                Join Our Party Now ↗
               </Link>
             </Button>
           </nav>
@@ -244,7 +596,7 @@ export function SiteFooter() {
   const { language } = useSiteLanguage();
 
   return (
-    <footer className="bg-slate-950 text-slate-200 border-t-4 border-primary">
+    <footer className="w-full max-w-full overflow-hidden bg-slate-950 text-slate-200 border-t-4 border-primary">
       <div className="mx-auto max-w-[1360px] px-5 pb-8 pt-16 sm:px-8 lg:px-12">
         <div className="grid gap-10 border-b border-slate-800 pb-12 lg:grid-cols-[1.5fr_0.8fr_0.8fr_1.1fr]">
           {/* Brand Info */}
@@ -358,136 +710,352 @@ export function SiteFooter() {
 
 export function HomePage() {
   const { language } = useSiteLanguage();
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   return (
     <>
       <SiteHeader />
-      <main>
-        {/* HERO SECTION */}
-        <section className="relative isolate min-h-[640px] overflow-hidden border-b border-border/80 lg:min-h-[720px] flex items-center">
-          {/* Background Image with Dark Vignette Overlay */}
-          <img
-            alt="AINNMK Public Rally"
-            className="absolute inset-0 -z-20 size-full object-cover object-center brightness-90 filter"
-            fetchPriority="high"
-            src={rallyImg}
-          />
-          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-slate-950/95 via-slate-950/85 to-slate-900/60" />
+      <main className="w-full max-w-full overflow-x-hidden">
+        {/* =========================================================================
+            HERO BANNER SECTION - EXACT REFERENCE LAYOUT WITH BANNER.PNG
+            ========================================================================= */}
+        <section className="relative w-full overflow-hidden bg-white border-b border-slate-200">
+          <div className="relative w-full aspect-[2164/726]">
+            <img
+              src="/banner.png"
+              alt="நம் தாய்நாடு – நம் குடும்பம் | அகில இந்திய நம் நாடு மக்கள் கட்சி"
+              className="w-full h-auto block select-none"
+            />
 
-          <div className="relative mx-auto max-w-[1360px] px-5 py-20 sm:px-8 lg:px-12 w-full">
-            <div className="grid lg:grid-cols-12 gap-12 items-center">
-              <div className="lg:col-span-8 text-white space-y-6">
-                {/* Badge */}
-                <div className="inline-flex items-center gap-3 rounded-full bg-emerald-900/80 border border-emerald-500/30 px-4 py-1.5 shadow-md backdrop-blur">
-                  <BrandMark className="size-6" />
-                  <span className="text-xs font-extrabold uppercase tracking-widest text-brand-yellow">
-                    2008 முதல் · அகில இந்திய நம் நாடு மக்கள் கட்சி
-                  </span>
+            {/* Overlaid Action Buttons (Placed right below the slogan text on the left) */}
+            <div className="absolute left-[3%] sm:left-[4.5%] md:left-[5%] bottom-[8%] sm:bottom-[12%] md:bottom-[15%] lg:bottom-[17%] z-10 flex flex-wrap items-center gap-2 sm:gap-3.5">
+              <Link
+                to="/about"
+                className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-[#12883c] hover:bg-[#0e6e30] px-3 py-1.5 sm:px-5 sm:py-2.5 md:px-6 md:py-3 text-[11px] sm:text-xs md:text-sm font-bold text-white shadow-lg shadow-emerald-950/20 transition-all hover:scale-105 active:scale-95"
+              >
+                <span>எங்கள் கட்சியை பற்றி</span>
+                <ArrowRight className="size-3.5 sm:size-4" />
+              </Link>
+              <Link
+                to="/news"
+                className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-white hover:bg-slate-50 px-3 py-1.5 sm:px-5 sm:py-2.5 md:px-6 md:py-3 text-[11px] sm:text-xs md:text-sm font-bold text-slate-800 shadow-lg shadow-slate-900/10 border border-slate-200/90 transition-all hover:scale-105 active:scale-95"
+              >
+                <span>செய்திகளை பார்க்க</span>
+                <ArrowRight className="size-3.5 sm:size-4" />
+              </Link>
+            </div>
+
+            {/* Carousel Navigation Chevrons */}
+            <button
+              type="button"
+              onClick={() => setCurrentSlide((prev) => (prev > 0 ? prev - 1 : 3))}
+              aria-label="Previous Slide"
+              className="absolute left-2.5 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 z-10 size-7 sm:size-9 md:size-10 rounded-full bg-slate-900/60 hover:bg-slate-900/80 text-white flex items-center justify-center backdrop-blur-xs transition-colors shadow-md"
+            >
+              <ChevronLeft className="size-4 sm:size-5 md:size-6" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentSlide((prev) => (prev < 3 ? prev + 1 : 0))}
+              aria-label="Next Slide"
+              className="absolute right-2.5 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-10 size-7 sm:size-9 md:size-10 rounded-full bg-slate-900/60 hover:bg-slate-900/80 text-white flex items-center justify-center backdrop-blur-xs transition-colors shadow-md"
+            >
+              <ChevronRight className="size-4 sm:size-5 md:size-6" />
+            </button>
+
+            {/* Carousel Indicator Dots */}
+            <div className="absolute bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 sm:gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentSlide(0)}
+                aria-label="Go to slide 1"
+                className={`transition-all ${currentSlide === 0 ? "h-1.5 sm:h-2 w-5 sm:w-7 rounded-full bg-white shadow-xs" : "size-1.5 sm:size-2 rounded-full bg-white/60 hover:bg-white"}`}
+              />
+              <button
+                type="button"
+                onClick={() => setCurrentSlide(1)}
+                aria-label="Go to slide 2"
+                className={`transition-all ${currentSlide === 1 ? "h-1.5 sm:h-2 w-5 sm:w-7 rounded-full bg-white shadow-xs" : "size-1.5 sm:size-2 rounded-full bg-white/60 hover:bg-white"}`}
+              />
+              <button
+                type="button"
+                onClick={() => setCurrentSlide(2)}
+                aria-label="Go to slide 3"
+                className={`transition-all ${currentSlide === 2 ? "h-1.5 sm:h-2 w-5 sm:w-7 rounded-full bg-white shadow-xs" : "size-1.5 sm:size-2 rounded-full bg-white/60 hover:bg-white"}`}
+              />
+              <button
+                type="button"
+                onClick={() => setCurrentSlide(3)}
+                aria-label="Go to slide 4"
+                className={`transition-all ${currentSlide === 3 ? "h-1.5 sm:h-2 w-5 sm:w-7 rounded-full bg-white shadow-xs" : "size-1.5 sm:size-2 rounded-full bg-white/60 hover:bg-white"}`}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 2: ABOUT PARTY & 4 IDEOLOGY CARDS (EXACT REFERENCE DESIGN)
+            ========================================================================= */}
+        <section className="bg-white py-8 sm:py-10 border-b border-slate-200/80">
+          <div className="w-full px-4 sm:px-6 xl:px-8 2xl:px-12">
+            <div className="grid lg:grid-cols-12 gap-6 items-stretch">
+              {/* Left Column: About Our Party (5 Cols) */}
+              <div className="lg:col-span-5 flex flex-col">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="h-0.5 w-4 bg-[#12883c] rounded-full" />
+                    <span className="h-0.5 w-4 bg-[#12883c] rounded-full" />
+                  </div>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                    {language === "ta" ? "எங்கள் கட்சியைப் பற்றி" : "About Our Party"}
+                  </h2>
                 </div>
 
-                {/* Slogan Title */}
-                <h1 className="text-4xl font-black leading-[1.15] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-                  {language === "ta" ? (
-                    <>
-                      நம் தாய்நாடு — <br />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-yellow via-amber-200 to-emerald-400">
-                        நம் மக்கள் குடும்பம்!
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      Our Motherland — <br />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-yellow via-amber-200 to-emerald-400">
-                        Our United Family!
-                      </span>
-                    </>
-                  )}
-                </h1>
-
-                {/* Subtitle */}
-                <p className="max-w-2xl text-base sm:text-lg text-slate-200 font-medium leading-relaxed">
-                  {language === "ta"
-                    ? "சாதி, மதம், மொழி, இனம் என்ற வேறுபாடுகளைக் கடந்து, உழவர் பெருமக்களின் வாழ்வாதாரத்தையும், இளைஞர்கள் மற்றும் மகளிரின் எதிர்காலத்தையும் செழிக்கச் செய்யும் மக்கள் இயக்கம்!"
-                    : "A transformative grassroots movement uniting communities beyond caste, creed, and language to secure agrarian sovereignty, youth employment, and women's leadership."}
-                </p>
-
-                {/* Action Buttons */}
-                <div className="pt-2 flex flex-wrap items-center gap-4">
-                  <Button asChild className="h-12 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-6 text-sm font-extrabold shadow-lg shadow-emerald-900/40 text-white">
-                    <Link to="/membership">
-                      <Sparkles className="size-4 mr-2" />
-                      {language === "ta" ? "உறுப்பினராக இணையுங்கள்" : "Become a Member"}
-                      <ArrowRight className="size-4 ml-2" />
-                    </Link>
-                  </Button>
-                  <Button asChild className="h-12 rounded-lg border-2 border-white/40 bg-white/10 px-6 text-sm font-bold text-white hover:bg-white/20 backdrop-blur" variant="outline">
-                    <Link to="/ideology">
-                      <BookOpen className="size-4 mr-2 text-brand-yellow" />
-                      {language === "ta" ? "கொள்கை ஆவணம்" : "Read Manifesto"}
-                    </Link>
-                  </Button>
-                  <Button asChild className="h-12 rounded-lg px-4 text-sm font-bold text-brand-yellow hover:text-white" variant="ghost">
-                    <Link to="/news">
-                      <Newspaper className="size-4 mr-1.5" />
-                      {language === "ta" ? "சமீபத்திய செய்திகள்" : "Latest News"}
-                    </Link>
-                  </Button>
+                <div className="flex-1 rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                  <div className="shrink-0 flex items-center justify-center">
+                    <BrandMark className="size-24 sm:size-28 md:size-32 drop-shadow-md" />
+                  </div>
+                  <div className="flex-1 flex flex-col justify-between h-full space-y-4 text-center sm:text-left">
+                    <p className="text-xs sm:text-[13px] text-slate-700 font-medium leading-relaxed">
+                      {language === "ta"
+                        ? "அகில இந்திய நம் நாடு மக்கள் கட்சி 2008 ஆம் ஆண்டு தொடங்கப்பட்டது. சாதி, மதம், மொழி, இனம் போன்ற வேறுபாடுகள் இல்லாமல் அனைவரும் ஒரே சமுதாயமாகவும், ஒரே குடும்பமாகவும் வாழ வேண்டும் என்பது எங்கள் கொள்கை."
+                        : "Agila India Nam Nadu Makkal Katchi was founded in 2008. We champion a harmonious society where citizens live with dignity as one family, transcending all barriers of caste, creed, and language."}
+                    </p>
+                    <div>
+                      <Link
+                        to="/about"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-[#12883c] hover:bg-[#0e6e30] px-5 py-2 text-xs font-bold text-white shadow-xs transition-transform hover:scale-105 active:scale-95"
+                      >
+                        <span>{language === "ta" ? "மேலும் அறிய" : "Read More"}</span>
+                        <ArrowRight className="size-3.5" />
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Symbol & Emblem Showcase Card */}
-              <div className="lg:col-span-4 flex justify-center">
-                <div className="w-full max-w-sm rounded-3xl border-2 border-emerald-500/30 bg-slate-900/90 p-8 text-center text-white shadow-2xl backdrop-blur-xl relative overflow-hidden group">
-                  <div className="absolute -right-16 -top-16 size-48 rounded-full bg-emerald-500/10 blur-2xl group-hover:bg-emerald-500/20 transition-all" />
-                  <div className="relative flex flex-col items-center">
-                    <div className="relative p-2 rounded-full bg-gradient-to-tr from-emerald-500 via-amber-400 to-purple-600 shadow-xl">
-                      <BrandMark className="size-28 sm:size-32 rounded-full bg-white p-1" />
+              {/* Right Column: 4 Ideology Feature Cards (7 Cols) */}
+              <div className="lg:col-span-7 flex flex-col">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="h-0.5 w-4 bg-[#12883c] rounded-full" />
+                    <span className="h-0.5 w-4 bg-[#12883c] rounded-full" />
+                  </div>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                    {language === "ta" ? "எங்கள் கொள்கைகள்" : "Our Ideology"}
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 flex-1">
+                  {/* Card 1: சமூக ஒற்றுமை */}
+                  <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xs flex flex-col items-center text-center justify-between hover:border-emerald-300 hover:shadow-md transition-all">
+                    <div className="flex size-14 items-center justify-center rounded-2xl bg-emerald-50 text-[#12883c] my-1">
+                      <Users className="size-8" />
                     </div>
-                    <span className="mt-5 inline-block text-[11px] font-extrabold uppercase tracking-widest text-brand-yellow">
-                      தேர்தல் சின்னம் · OFFICIAL SYMBOL
-                    </span>
-                    <h3 className="mt-2 text-2xl font-black text-white">
-                      செழிக்கும் நெற்கதிர்
-                    </h3>
-                    <p className="mt-1 text-xs text-emerald-300 font-semibold">
-                      The Golden Sheaf of Paddy
-                    </p>
-                    <p className="mt-4 text-xs text-slate-300 leading-relaxed border-t border-slate-800 pt-4">
-                      {language === "ta"
-                        ? "உழவனின் உழைப்பே நாட்டின் உயிர்நாடி! பசிப்பிணி போக்கும் நெற்கதிரே நமது அடையாளச் சின்னம்."
-                        : "The sacred grain that sustains humanity. A symbol of resilience, dignity, and agricultural prosperity."}
-                    </p>
+                    <div className="mt-2">
+                      <h3 className="text-xs sm:text-sm font-black text-slate-900">
+                        {language === "ta" ? "சமூக ஒற்றுமை" : "Social Unity"}
+                      </h3>
+                      <p className="mt-1 text-[11px] text-slate-600 font-medium leading-snug">
+                        {language === "ta" ? "அனைவரும் ஒன்றிணைந்து வாழ்தல்" : "Living in collective harmony"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Card 2: சமத்துவம் */}
+                  <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xs flex flex-col items-center text-center justify-between hover:border-purple-300 hover:shadow-md transition-all">
+                    <div className="flex size-14 items-center justify-center rounded-2xl bg-purple-50 text-[#4c1d6f] my-1">
+                      <Scale className="size-8" />
+                    </div>
+                    <div className="mt-2">
+                      <h3 className="text-xs sm:text-sm font-black text-slate-900">
+                        {language === "ta" ? "சமத்துவம்" : "Equality"}
+                      </h3>
+                      <p className="mt-1 text-[11px] text-slate-600 font-medium leading-snug">
+                        {language === "ta" ? "அனைத்து மக்களும் சமம்" : "Equal rights for all citizens"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Card 3: மக்கள் நலன் */}
+                  <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xs flex flex-col items-center text-center justify-between hover:border-teal-300 hover:shadow-md transition-all">
+                    <div className="flex size-14 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 my-1">
+                      <HandHeart className="size-8" />
+                    </div>
+                    <div className="mt-2">
+                      <h3 className="text-xs sm:text-sm font-black text-slate-900">
+                        {language === "ta" ? "மக்கள் நலன்" : "Public Welfare"}
+                      </h3>
+                      <p className="mt-1 text-[11px] text-slate-600 font-medium leading-snug">
+                        {language === "ta" ? "எல்லோரின் நலனே எங்கள் குறிக்கோள்" : "Welfare of every citizen is our goal"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Card 4: இளைஞர் & மகளிர் பங்கேற்பு */}
+                  <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xs flex flex-col items-center text-center justify-between hover:border-indigo-300 hover:shadow-md transition-all">
+                    <div className="flex size-14 items-center justify-center rounded-2xl bg-indigo-50 text-[#4c1d6f] my-1">
+                      <GraduationCap className="size-8" />
+                    </div>
+                    <div className="mt-2">
+                      <h3 className="text-xs sm:text-sm font-black text-slate-900">
+                        {language === "ta" ? "இளைஞர் & மகளிர் பங்கேற்பு" : "Youth & Women"}
+                      </h3>
+                      <p className="mt-1 text-[11px] text-slate-600 font-medium leading-snug">
+                        {language === "ta" ? "இளைய தலைமுறையுடன் முன்னேறுவோம்" : "Progressing with youth & women"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+        </section>
 
-            {/* Live Key Stats Counter Bar */}
-            <div className="mt-14 grid grid-cols-2 gap-4 rounded-2xl border border-white/15 bg-white/5 p-6 backdrop-blur-md sm:grid-cols-4 lg:gap-8">
-              <div className="text-center sm:text-left">
-                <p className="text-3xl sm:text-4xl font-black text-brand-yellow">{PARTY_INFO.stats.membersCount}</p>
-                <p className="mt-1 text-xs sm:text-sm font-semibold text-slate-300">
-                  {language === "ta" ? "கட்சித் தொண்டர்கள்" : "Enrolled Members"}
-                </p>
+        {/* =========================================================================
+            SECTION 3: THREE CARDS (LEADERSHIP, LATEST NEWS, JOIN PARTY) WITH CORNER LEAVES
+            ========================================================================= */}
+        <section className="relative bg-white py-8 sm:py-10 border-b border-slate-200/80 overflow-hidden w-full max-w-full">
+          {/* Decorative Corner Leaf Motifs */}
+          <div className="pointer-events-none absolute left-0 bottom-1 select-none opacity-25 sm:opacity-35">
+            <Leaf className="size-16 sm:size-20 text-emerald-600 rotate-45" />
+          </div>
+          <div className="pointer-events-none absolute right-0 bottom-1 select-none opacity-25 sm:opacity-35">
+            <Leaf className="size-16 sm:size-20 text-emerald-600 -rotate-45" />
+          </div>
+
+          <div className="w-full px-4 sm:px-6 xl:px-8 2xl:px-12 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+              
+              {/* Card 1: Our Leadership (5 Cols) */}
+              <div className="lg:col-span-5 rounded-2xl border border-slate-200/90 bg-white overflow-hidden shadow-xs flex flex-col justify-between">
+                <div className="bg-[#4c1d6f] px-4 py-2.5 flex items-center justify-between text-white">
+                  <div className="flex items-center gap-1.5 font-bold text-xs sm:text-sm">
+                    <span className="text-amber-300 font-black">-</span>
+                    <span>{language === "ta" ? "எங்கள் தலைமை" : "Our Leadership"}</span>
+                  </div>
+                  <Link
+                    to="/leadership"
+                    className="text-[#fbbf24] hover:text-amber-300 text-xs font-bold inline-flex items-center gap-1 transition-colors"
+                  >
+                    <span>{language === "ta" ? "அனைவரையும் பார்க்க" : "View All"}</span>
+                    <ArrowRight className="size-3" />
+                  </Link>
+                </div>
+
+                <div className="p-4 flex items-center justify-between gap-2 flex-1">
+                  <button
+                    type="button"
+                    aria-label="Previous leader"
+                    className="text-slate-400 hover:text-slate-700 transition-colors p-1"
+                  >
+                    <ChevronLeft className="size-5" />
+                  </button>
+
+                  <div className="grid grid-cols-4 gap-2.5 sm:gap-3 flex-1 items-center">
+                    <Link to="/leadership" className="group flex flex-col items-center">
+                      <img
+                        src={leaderImg}
+                        alt="Dr. N. Dharmaraj"
+                        className="size-14 sm:size-16 rounded-xl object-cover object-top border-2 border-amber-400/80 shadow-xs group-hover:scale-105 transition-transform"
+                      />
+                    </Link>
+                    <Link to="/leadership" className="group flex flex-col items-center">
+                      <img
+                        src={womenImg}
+                        alt="Adv. S. Anbarasi"
+                        className="size-14 sm:size-16 rounded-xl object-cover object-top border-2 border-slate-200 shadow-xs group-hover:scale-105 transition-transform"
+                      />
+                    </Link>
+                    <Link to="/leadership" className="group flex flex-col items-center">
+                      <img
+                        src={youthImg}
+                        alt="Er. R. Karthikeyan"
+                        className="size-14 sm:size-16 rounded-xl object-cover object-top border-2 border-slate-200 shadow-xs group-hover:scale-105 transition-transform"
+                      />
+                    </Link>
+                    <Link to="/leadership" className="group flex flex-col items-center">
+                      <img
+                        src={farmersImg}
+                        alt="Farmer V. Selvam"
+                        className="size-14 sm:size-16 rounded-xl object-cover object-top border-2 border-slate-200 shadow-xs group-hover:scale-105 transition-transform"
+                      />
+                    </Link>
+                  </div>
+
+                  <button
+                    type="button"
+                    aria-label="Next leader"
+                    className="text-slate-400 hover:text-slate-700 transition-colors p-1"
+                  >
+                    <ChevronRight className="size-5" />
+                  </button>
+                </div>
               </div>
-              <div className="text-center sm:text-left">
-                <p className="text-3xl sm:text-4xl font-black text-emerald-400">{PARTY_INFO.stats.districtsCovered}</p>
-                <p className="mt-1 text-xs sm:text-sm font-semibold text-slate-300">
-                  {language === "ta" ? "மாவட்டக் கிளைகள்" : "Districts Active"}
-                </p>
+
+              {/* Card 2: Latest News (4 Cols) */}
+              <div className="lg:col-span-4 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xs flex flex-col justify-between">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-slate-900">
+                    <span className="text-[#12883c] font-black">-</span>
+                    <span>{language === "ta" ? "சமீபத்திய செய்திகள்" : "Latest News"}</span>
+                  </div>
+                  <Link
+                    to="/news"
+                    className="text-[#4c1d6f] hover:text-purple-900 text-xs font-bold inline-flex items-center gap-1 transition-colors"
+                  >
+                    <span>{language === "ta" ? "முழுவதும் பார்க்க" : "View All"}</span>
+                    <ArrowRight className="size-3" />
+                  </Link>
+                </div>
+
+                <div className="mt-3 flex items-center gap-3">
+                  <img
+                    src={rallyImg}
+                    alt="AINNMK State Meeting"
+                    className="size-20 sm:size-22 rounded-xl object-cover shrink-0 border border-slate-200"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      to="/news"
+                      className="text-xs sm:text-[13px] font-bold text-slate-900 hover:text-[#12883c] line-clamp-2 leading-snug transition-colors"
+                    >
+                      {language === "ta"
+                        ? "அகில இந்திய நம் நாடு மக்கள் கட்சி மாநில அளவிலான கூட்டம் வெற்றி..."
+                        : "Statewide executive conference concludes with mass participation..."}
+                    </Link>
+                    <div className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
+                      <CalendarDays className="size-3.5 text-slate-400" />
+                      <span>Nov 18, 2026</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="text-center sm:text-left">
-                <p className="text-3xl sm:text-4xl font-black text-purple-300">{PARTY_INFO.stats.yearsOfService}</p>
-                <p className="mt-1 text-xs sm:text-sm font-semibold text-slate-300">
-                  {language === "ta" ? "ஆண்டுகள் மக்கள் பணி" : "Years of Grassroots Service"}
-                </p>
+
+              {/* Card 3: Join Our Party (3 Cols) */}
+              <div className="lg:col-span-3 rounded-2xl bg-[#4c1d6f] text-white p-5 shadow-sm flex flex-col items-center justify-between text-center relative overflow-hidden">
+                <div className="relative z-10 w-full flex flex-col items-center">
+                  <h3 className="text-sm sm:text-base font-black tracking-wide text-white">
+                    {language === "ta" ? "கட்சியில் இணையுங்கள்" : "Join Our Party"}
+                  </h3>
+                  <p className="mt-1 text-[11px] sm:text-xs text-purple-200 font-medium">
+                    {language === "ta" ? "ஒற்றுமையுடன் இணைந்து செயல்பட வாருங்கள்..." : "Come forward and unite with us..."}
+                  </p>
+
+                  <div className="my-3 flex size-12 sm:size-14 items-center justify-center rounded-full bg-white/10 border border-white/20">
+                    <Users className="size-6 sm:size-7 text-white" />
+                  </div>
+
+                  <Link
+                    to="/membership"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[#fbbf24] hover:bg-amber-400 px-5 py-2 text-xs font-black text-slate-950 shadow-sm transition-transform hover:scale-105 active:scale-95"
+                  >
+                    <span>{language === "ta" ? "உறுப்பினர் பதிவு" : "Member Registration"}</span>
+                    <ArrowRight className="size-3.5" />
+                  </Link>
+                </div>
               </div>
-              <div className="text-center sm:text-left">
-                <p className="text-3xl sm:text-4xl font-black text-amber-300">{PARTY_INFO.stats.welfareEvents}</p>
-                <p className="mt-1 text-xs sm:text-sm font-semibold text-slate-300">
-                  {language === "ta" ? "நடைபெற்ற மக்கள் நலத்திட்டங்கள்" : "Welfare Initiatives"}
-                </p>
-              </div>
+
             </div>
           </div>
         </section>
@@ -927,7 +1495,7 @@ export function AboutPage({ page }: { page: "about" | "ideology" }) {
   return (
     <>
       <SiteHeader />
-      <main>
+      <main className="w-full max-w-full overflow-x-hidden">
         {/* Banner */}
         <section className="relative overflow-hidden bg-gradient-to-b from-emerald-950 via-emerald-900 to-slate-950 py-20 px-5 sm:px-8 lg:px-12 text-white">
           <div className="mx-auto max-w-[1360px] text-center max-w-3xl">
@@ -1541,7 +2109,7 @@ export function MembershipPage() {
   return (
     <>
       <SiteHeader />
-      <main>
+      <main className="w-full max-w-full overflow-x-hidden">
         {/* Banner */}
         <section className="bg-gradient-to-b from-emerald-950 via-emerald-900 to-slate-950 py-16 px-5 sm:px-8 lg:px-12 text-white">
           <div className="mx-auto max-w-[1360px] text-center max-w-3xl">
@@ -1742,7 +2310,7 @@ export function ContactPage() {
   return (
     <>
       <SiteHeader />
-      <main>
+      <main className="w-full max-w-full overflow-x-hidden">
         <ContactSection />
       </main>
       <SiteFooter />
