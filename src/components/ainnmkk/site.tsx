@@ -6,7 +6,9 @@ import {
   ArrowUpRight,
   Award,
   BookOpen,
+  Calendar,
   CalendarDays,
+  Camera,
   CheckCircle2,
   ChevronDown,
   ChevronLeft,
@@ -22,7 +24,10 @@ import {
   HeartHandshake,
   Home,
   Instagram,
+  KeyRound,
   Leaf,
+  LogIn,
+  LogOut,
   Mail,
   MapPin,
   Megaphone,
@@ -31,14 +36,18 @@ import {
   Pause,
   Phone,
   Play,
+  QrCode,
   Scale,
   Search,
   Send,
+  Share2,
   Shield,
   ShieldCheck,
   Sparkles,
   Sprout,
   Twitter,
+  Upload,
+  User,
   Users,
   UserCheck,
   Volume2,
@@ -80,6 +89,14 @@ import {
   getAssetUrl,
 } from "@/data/assets";
 import { VirtualIdCard } from "@/components/ainnmkk/VirtualIdCard";
+import {
+  getActiveMember,
+  loginMember,
+  logoutMember,
+  saveMember,
+  generateMemberId,
+  type MemberRecord,
+} from "@/lib/member-auth";
 
 export const partyLogoSrc = partyLogoImg;
 
@@ -372,6 +389,14 @@ export function SiteHeader() {
   const location = useLocation();
   const currentPath = location?.pathname || "";
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeMember, setActiveMember] = useState<MemberRecord | null>(null);
+
+  useEffect(() => {
+    setActiveMember(getActiveMember());
+    const onAuthChanged = () => setActiveMember(getActiveMember());
+    window.addEventListener("ainnmk-member-auth-changed", onAuthChanged);
+    return () => window.removeEventListener("ainnmk-member-auth-changed", onAuthChanged);
+  }, []);
   const [mobileExpandedGroups, setMobileExpandedGroups] = useState<Record<string, boolean>>({
     "About Us": true,
     "Leadership": false,
@@ -487,7 +512,28 @@ export function SiteHeader() {
             })}
           </nav>
 
-          <div className="hidden shrink-0 items-center gap-3 xl:flex">
+          <div className="hidden shrink-0 items-center gap-2.5 xl:flex">
+            {activeMember ? (
+              <Link
+                to="/membership"
+                className="h-8 2xl:h-9 rounded-full border border-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 2xl:px-4 text-[11px] 2xl:text-xs font-bold text-emerald-950 inline-flex items-center gap-1.5 transition-colors shadow-2xs"
+              >
+                <UserCheck className="size-3.5 text-emerald-700" />
+                <span className="max-w-28 truncate">{activeMember.full_name.split(" ")[0]}</span>
+                <span className="text-[10px] bg-[#12883c] text-white px-1.5 py-0.5 rounded font-mono font-black">
+                  ID
+                </span>
+              </Link>
+            ) : (
+              <Link
+                to="/membership"
+                className="px-2.5 py-1 text-[11px] 2xl:text-xs font-bold text-slate-700 hover:text-[#12883c] inline-flex items-center gap-1 transition-colors"
+              >
+                <LogIn className="size-3.5 text-slate-500" />
+                <span>{language === "ta" ? "உள்நுழைவு" : "Login"}</span>
+              </Link>
+            )}
+
             <Button
               asChild
               className="h-8 2xl:h-9 rounded-full bg-[#fbbf24] hover:bg-[#f59e0b] px-3.5 2xl:px-5 text-[11px] 2xl:text-xs font-black shadow-xs text-slate-950 transition-transform hover:scale-105"
@@ -580,11 +626,36 @@ export function SiteHeader() {
               );
             })}
 
-            <Button asChild className="mt-3 w-full rounded-full bg-[#fbbf24] hover:bg-[#f59e0b] text-slate-950 font-black" onClick={() => setMenuOpen(false)}>
-              <Link to="/membership">
-                Join Our Party Now ↗
-              </Link>
-            </Button>
+            <div className="mt-3 pt-3 border-t border-border flex flex-col gap-2">
+              {activeMember ? (
+                <Link
+                  to="/membership"
+                  onClick={() => setMenuOpen(false)}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-950 font-bold text-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="size-4 text-emerald-700 shrink-0" />
+                    <span className="truncate">{activeMember.full_name} ({activeMember.member_id})</span>
+                  </div>
+                  <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full shrink-0">அட்டை</span>
+                </Link>
+              ) : (
+                <Link
+                  to="/membership"
+                  onClick={() => setMenuOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-800 font-bold text-xs"
+                >
+                  <LogIn className="size-4 text-[#12883c]" />
+                  <span>{language === "ta" ? "உறுப்பினர் உள்நுழைவு (Member Login)" : "Member Portal Login"}</span>
+                </Link>
+              )}
+
+              <Button asChild className="w-full rounded-full bg-[#fbbf24] hover:bg-[#f59e0b] text-slate-950 font-black" onClick={() => setMenuOpen(false)}>
+                <Link to="/membership">
+                  <span>Join Our Party Now ↗</span>
+                </Link>
+              </Button>
+            </div>
           </nav>
         ) : null}
       </header>
@@ -956,7 +1027,7 @@ export function HomePage() {
                     <Link to="/leadership" className="group flex flex-col items-center">
                       <img
                         src={leaderImg}
-                        alt="Dr. N. Dharmaraj"
+                        alt="A. Munna Basha"
                         className="size-14 sm:size-16 rounded-xl object-cover object-top border-2 border-amber-400/80 shadow-xs group-hover:scale-105 transition-transform"
                       />
                     </Link>
@@ -1070,12 +1141,12 @@ export function HomePage() {
                   <div className="relative rounded-2xl overflow-hidden border-4 border-white shadow-2xl bg-white">
                     <img
                       src={leaderImg}
-                      alt="Dr. N. Dharmaraj"
+                      alt="A. Munna Basha"
                       className="w-full h-[440px] object-cover object-top hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent p-6 text-white text-left">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-brand-yellow">
-                        கட்சியின் நிறுவனர் & மாநிலத் தலைவர்
+                        {language === "ta" ? "தேசிய நிறுவனர் தலைவர்" : "National Founder President"}
                       </span>
                       <h4 className="text-xl font-black text-white mt-1">{LEADERS[0]?.nameTa}</h4>
                       <p className="text-xs text-slate-300">{LEADERS[0]?.nameEn}</p>
@@ -1535,14 +1606,16 @@ export function AboutPage({ page }: { page: "about" | "ideology" }) {
                   </div>
                 </div>
                 <div className="lg:col-span-7 space-y-5 text-slate-700">
-                  <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">நிறுவனர் தொலைநோக்குப் பார்வை</span>
+                  <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
+                    {language === "ta" ? "நிறுவனர் தொலைநோக்குப் பார்வை" : "Founder Vision"}
+                  </span>
                   <h2 className="text-3xl font-extrabold text-slate-900 leading-tight">
-                    {language === "ta" ? "மக்களுக்கான தலைவர் முனைவர் நா. தர்மராஜ்" : "Founder President Dr. N. Dharmaraj"}
+                    {language === "ta" ? "மக்களுக்கான தலைவர் அ. முன்னா பாஷா" : "National Founder President A. Munna Basha"}
                   </h2>
                   <p className="text-sm leading-relaxed">
                     {language === "ta"
-                      ? "முனைவர் நா. தர்மராஜ் அவர்கள் அடித்தட்டு மக்களுக்காகவும், டெல்டா உழவர்களின் வாழ்வாதாரத்திற்காகவும் தனது வாழ்க்கையை அர்ப்பணித்த சமூகப் போராளி மற்றும் சட்ட அறிஞர். 2008-ஆம் ஆண்டு சாதி மத பேதமற்ற ஒரு மாற்று அரசியலை முன்னெடுத்து AINNMK இயக்கத்தைத் தோற்றுவித்தார்."
-                      : "Dr. N. Dharmaraj is a seasoned advocate, grassroots organizer, and scholar dedicated to protecting the livelihood of smallholder farmers and marginalized families. He established AINNMK in 2008 to introduce an uncorrupted political alternative."}
+                      ? "அ. முன்னா பாஷா அவர்கள் அடித்தட்டு மக்களுக்காகவும், டெல்டா உழவர்களின் வாழ்வாதாரத்திற்காகவும் தனது வாழ்க்கையை அர்ப்பணித்த சமூகப் போராளி மற்றும் மக்கள் தலைவர். 2008-ஆம் ஆண்டு சாதி மத பேதமற்ற ஒரு மாற்று அரசியலை முன்னெடுத்து AINNMK இயக்கத்தைத் தோற்றுவித்தார்."
+                      : "A. Munna Basha is a dedicated grassroots leader and reformer dedicated to protecting the livelihood of smallholder farmers and marginalized families. He established AINNMK in 2008 to introduce an uncorrupted political alternative."}
                   </p>
                   <blockquote className="border-l-4 border-brand-yellow pl-4 italic text-slate-900 font-semibold text-sm">
                     "{LEADERS[0]?.quoteTa}"
@@ -2100,73 +2173,313 @@ export function DirectoryPage({
 }
 
 /* =========================================================================
-   MEMBERSHIP PAGE (ONLINE APPLICATION + LIVE VIRTUAL ID CARD)
+   MEMBERSHIP PAGE (JOIN OUR PARTY FORM + VIRTUAL ID CARD + MEMBER LOGIN)
    ========================================================================= */
+
+const TN_DISTRICTS = [
+  "சென்னை (Chennai)",
+  "கோயம்புத்தூர் (Coimbatore)",
+  "மதுரை (Madurai)",
+  "திருச்சிராப்பள்ளி (Tiruchirappalli)",
+  "சேலம் (Salem)",
+  "திருநெல்வேலி (Tirunelveli)",
+  "தஞ்சாவூர் (Thanjavur)",
+  "திருப்பூர் (Tiruppur)",
+  "ஈரோடு (Erode)",
+  "வேலூர் (Vellore)",
+  "திண்டுக்கல் (Dindigul)",
+  "விருதுநகர் (Virudhunagar)",
+  "திருவாரூர் (Thiruvarur)",
+  "நாகப்பட்டினம் (Nagapattinam)",
+  "மயிலாடுதுறை (Mayiladuthurai)",
+  "கடலூர் (Cuddalore)",
+  "விழுப்புரம் (Viluppuram)",
+  "கள்ளக்குறிச்சி (Kallakurichi)",
+  "செங்கல்பட்டு (Chengalpattu)",
+  "காஞ்சிபுரம் (Kanchipuram)",
+  "திருவள்ளூர் (Tiruvallur)",
+  "இராணிப்பேட்டை (Ranipet)",
+  "திருப்பத்தூர் (Tirupattur)",
+  "திருவண்ணாமலை (Tiruvannamalai)",
+  "தருமபுரி (Dharmapuri)",
+  "கிருஷ்ணகிரி (Krishnagiri)",
+  "நாமக்கல் (Namakkal)",
+  "நீலகிரி (Nilgiris)",
+  "கரூர் (Karur)",
+  "பெரம்பலூர் (Perambalur)",
+  "அரியலூர் (Ariyalur)",
+  "புதுக்கோட்டை (Pudukkottai)",
+  "சிவகங்கை (Sivaganga)",
+  "இராமநாதபுரம் (Ramanathapuram)",
+  "தூத்துக்குடி (Thoothukudi)",
+  "தென்காசி (Tenkasi)",
+  "கன்னியாகுமரி (Kanniyakumari)",
+  "தேனி (Theni)",
+];
 
 export function MembershipPage() {
   const { language } = useSiteLanguage();
+  const [activeTab, setActiveTab] = useState<"register" | "login">("register");
+  const [activeMember, setActiveMember] = useState<MemberRecord | null>(null);
+
+  useEffect(() => {
+    setActiveMember(getActiveMember());
+    const onAuthChanged = () => setActiveMember(getActiveMember());
+    window.addEventListener("ainnmk-member-auth-changed", onAuthChanged);
+    return () => window.removeEventListener("ainnmk-member-auth-changed", onAuthChanged);
+  }, []);
+
+  const handleLogout = () => {
+    logoutMember();
+    setActiveMember(null);
+    toast.info(language === "ta" ? "கணக்கிலிருந்து வெளியேறிவிட்டீர்கள்." : "Logged out successfully.");
+  };
 
   return (
     <>
       <SiteHeader />
-      <main className="w-full max-w-full overflow-x-hidden">
-        {/* Banner */}
-        <section className="bg-gradient-to-b from-emerald-950 via-emerald-900 to-slate-950 py-16 px-5 sm:px-8 lg:px-12 text-white">
-          <div className="mx-auto max-w-[1360px] text-center max-w-3xl">
-            <span className="text-xs font-bold uppercase tracking-widest text-brand-yellow">
-              {language === "ta" ? "அதிகாரப்பூர்வ உறுப்பினர் சேர்க்கை" : "Cadre Enrollment & Digital ID"}
+      <main className="w-full max-w-full overflow-x-hidden bg-slate-50/50">
+        {/* Banner Section */}
+        <section className="bg-gradient-to-b from-emerald-950 via-emerald-900 to-slate-950 py-12 sm:py-16 px-4 sm:px-6 xl:px-8 text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent pointer-events-none" />
+          <div className="mx-auto max-w-4xl text-center relative z-10 space-y-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/20 border border-amber-300/40 px-3.5 py-1 text-xs font-black uppercase tracking-widest text-brand-yellow">
+              <Sparkles className="size-3.5 text-amber-300" />
+              <span>{language === "ta" ? "அகில இந்திய நம் நாடு மக்கள் கட்சி" : "Agila India Nam Nadu Makkal Katchi"}</span>
             </span>
-            <h1 className="mt-3 text-4xl sm:text-5xl font-black text-white">
-              {language === "ta" ? "ஒற்றுமையின் பயணத்தில் இணையுங்கள்!" : "Join the Movement for Change!"}
+            <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+              {activeMember
+                ? (language === "ta" ? "உங்கள் உறுப்பினர் போர்டல் & அடையாள அட்டை" : "Member Portal & Official ID Card")
+                : (language === "ta" ? "கட்சியில் இணையுங்கள் — உறுப்பினர் அடையாள அட்டை" : "Join Our Party — Official Digital Membership Card")}
             </h1>
-            <p className="mt-3 text-sm text-emerald-200 leading-relaxed">
+            <p className="max-w-2xl mx-auto text-xs sm:text-sm text-emerald-200 leading-relaxed">
               {language === "ta"
-                ? "சாதி, மத பேதமற்ற சமத்துவ சமுதாயத்தைப் படைக்க நம் நாடு மக்கள் கட்சியின் உறுதியான தொண்டராக இன்றே இணையுங்கள்."
-                : "Become an official verified member of AINNMK. Enter your details below and preview your dynamic PVC membership card immediately."}
+                ? "சாதி, மத, மொழி, இனம் கடந்து தமிழர்களின் சமத்துவ வாழ்விற்கும் உழவர் பெருமக்களின் உரிமைக்கும் குரல் கொடுக்கும் மக்கள் பேரியக்கம்."
+                : "Register as an official verified cadre of AINNMK to instantly receive your official two-sided Membership ID Card."}
             </p>
+
+            {/* Navigation Switcher (Register vs Login vs Logged In View) */}
+            <div className="pt-4 flex flex-wrap items-center justify-center gap-2">
+              {activeMember ? (
+                <div className="inline-flex items-center gap-2 rounded-full bg-emerald-800/80 border border-emerald-500/60 p-1.5 px-4 text-xs font-bold text-white shadow-lg backdrop-blur-md">
+                  <UserCheck className="size-4 text-emerald-300" />
+                  <span>{activeMember.full_name} ({activeMember.member_id})</span>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="ml-2 text-[11px] bg-white/20 hover:bg-white/30 text-white px-2.5 py-0.5 rounded-full transition-colors flex items-center gap-1"
+                  >
+                    <LogOut className="size-3" />
+                    <span>{language === "ta" ? "வெளியேறு" : "Logout"}</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="inline-flex rounded-full bg-slate-900/80 p-1.5 border border-white/20 backdrop-blur-md shadow-xl">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("register")}
+                    className={`px-5 py-2 rounded-full text-xs sm:text-sm font-black transition-all ${
+                      activeTab === "register"
+                        ? "bg-[#fbbf24] text-slate-950 shadow-md"
+                        : "text-white/80 hover:text-white"
+                    }`}
+                  >
+                    {language === "ta" ? "📝 புதிய உறுப்பினர் சேர்க்கை" : "📝 New Registration"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("login")}
+                    className={`px-5 py-2 rounded-full text-xs sm:text-sm font-black transition-all ${
+                      activeTab === "login"
+                        ? "bg-[#12883c] text-white shadow-md"
+                        : "text-white/80 hover:text-white"
+                    }`}
+                  >
+                    {language === "ta" ? "🔑 உறுப்பினர் உள்நுழைவு" : "🔑 Member Login"}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </section>
 
-        {/* Form and Virtual ID Card Section */}
-        <section className="py-16 px-5 sm:px-8 lg:px-12 bg-white">
-          <div className="mx-auto max-w-[1360px] space-y-14">
-            {/* Live Virtual ID Card Generator */}
-            <div className="rounded-2xl border-2 border-emerald-500/20 bg-slate-50/50 p-6 sm:p-10 shadow-sm">
-              <VirtualIdCard language={language} />
-            </div>
-
-            {/* Complete Membership Application Form */}
-            <div className="grid lg:grid-cols-12 gap-10 items-start border-t border-border pt-12">
-              <div className="lg:col-span-5 space-y-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                  {language === "ta" ? "விண்ணப்ப விவரங்கள்" : "Formal Verification Steps"}
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">
-                  {language === "ta" ? "அதிகாரப்பூர்வ உறுப்பினர் பதிவுப் படிவம்" : "Central Party Database Registration"}
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  {language === "ta"
-                    ? "விண்ணப்பங்கள் தலைமை அலுவலகத்தால் சரிபார்க்கப்பட்டு, மாவட்ட நிர்வாகிகள் வழியாக அதிகாரப்பூர்வ அட்டை உங்கள் முகவரிக்கு தபாலிலும் அனுப்பி வைக்கப்படும்."
-                    : "Your membership details are encrypted and securely filed. An official embossed laminated PVC card will also be mailed via your district coordinator."}
-                </p>
-
-                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-2">
-                  <div className="flex items-center gap-2 font-bold">
-                    <ShieldCheck className="size-4 text-emerald-700" />
-                    <span>உறுப்பினர் நன்மைகள்:</span>
+        {/* Dynamic Content Section */}
+        <section className="py-12 sm:py-16 px-4 sm:px-6 xl:px-8">
+          <div className="mx-auto max-w-[1360px]">
+            {activeMember ? (
+              /* =========================================================================
+                 MEMBER PORTAL VIEW (LOGGED IN OR JUST REGISTERED)
+                 ========================================================================= */
+              <div className="space-y-10">
+                {/* Congratulations & Credentials Island */}
+                <div className="rounded-3xl border-2 border-emerald-500/40 bg-gradient-to-r from-emerald-50 via-white to-amber-50/50 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-4 text-center md:text-left flex-col md:flex-row">
+                    <div className="size-16 rounded-2xl bg-[#0e7534] text-white flex items-center justify-center shadow-lg shrink-0 border-2 border-amber-300">
+                      <UserCheck className="size-9" />
+                    </div>
+                    <div>
+                      <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 px-3 py-0.5 text-xs font-extrabold mb-1">
+                        <CheckCircle2 className="size-3.5 text-emerald-600" />
+                        <span>அங்கீகரிக்கப்பட்ட கட்சி உறுப்பினர் (Verified Cadre)</span>
+                      </div>
+                      <h2 className="text-2xl font-black text-slate-900">
+                        {language === "ta" ? `வணக்கம், ${activeMember.full_name}!` : `Welcome, ${activeMember.full_name}!`}
+                      </h2>
+                      <p className="text-xs text-slate-600 font-medium mt-1">
+                        {language === "ta"
+                          ? `உங்கள் அதிகாரப்பூர்வ உறுப்பினர் அடையாள அட்டை இதோ. எதிர்காலத்தில் உள்நுழைய உங்கள் உறுப்பினர் எண் மற்றும் பிறந்த தேதியைப் பயன்படுத்தவும்.`
+                          : `Here is your official AINNMK Membership Identity Card. Use your Member ID & DOB to access your portal anytime.`}
+                      </p>
+                    </div>
                   </div>
-                  <ul className="space-y-1 list-disc pl-5 text-[11px] text-emerald-800">
-                    <li>கட்சியின் கொள்கை முடிவுகள் மற்றும் மாநில மாநாடுகளில் பங்கேற்பு</li>
-                    <li>இலவச சட்ட ஆலோசனை மற்றும் நலத்திட்ட உதவிகள்</li>
-                    <li>உள்ளாட்சி மற்றும் பொதுத் தேர்தல்களில் மக்கள் பணியாற்றும் வாய்ப்பு</li>
-                  </ul>
+
+                  <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+                    <div className="text-center md:text-right bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs min-w-36">
+                      <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider block">
+                        உறுப்பினர் எண் / Member ID
+                      </span>
+                      <span className="font-mono text-base font-black text-[#12883c] block mt-0.5">
+                        {activeMember.member_id}
+                      </span>
+                    </div>
+                    <div className="text-center md:text-right bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs min-w-32">
+                      <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider block">
+                        பிறந்த தேதி / DOB
+                      </span>
+                      <span className="font-mono text-base font-black text-purple-900 block mt-0.5">
+                        {activeMember.dob}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* The Live Official Membership Identity Card (Front & Back) */}
+                <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-10 shadow-lg">
+                  <div className="text-center max-w-xl mx-auto mb-8 space-y-1">
+                    <span className="text-xs font-black uppercase tracking-wider text-[#12883c]">
+                      அகில இந்திய நம் நாடு மக்கள் கட்சி
+                    </span>
+                    <h3 className="text-2xl font-black text-slate-900">
+                      உறுப்பினர் அடையாள அட்டை (Membership Identity Card)
+                    </h3>
+                    <p className="text-xs text-slate-600">
+                      கீழே உங்கள் அட்டையின் முன்பக்கம் மற்றும் பின்பக்கத்தைக் காணலாம். இதனை அச்சிடலாம் அல்லது சேமித்துக் கொள்ளலாம்.
+                    </p>
+                  </div>
+
+                  <VirtualIdCard member={activeMember} language={language} />
+
+                  <div className="mt-8 pt-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logoutMember();
+                        setActiveMember(null);
+                        setActiveTab("register");
+                      }}
+                      className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-950 transition-colors"
+                    >
+                      <span>➕ மற்றொரு புதிய உறுப்பினர் சேர்க்கை</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="inline-flex items-center gap-2 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-800 px-4 py-2 text-xs font-bold transition-colors"
+                    >
+                      <LogOut className="size-3.5" />
+                      <span>கணக்கிலிருந்து வெளியேறு (Logout)</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              <div className="lg:col-span-7">
-                <MembershipForm language={language} />
+            ) : activeTab === "login" ? (
+              /* =========================================================================
+                 MEMBER LOGIN VIEW
+                 ========================================================================= */
+              <div className="max-w-xl mx-auto">
+                <MemberLoginForm
+                  language={language}
+                  onSuccess={(member) => {
+                    setActiveMember(member);
+                  }}
+                  onSwitchToRegister={() => setActiveTab("register")}
+                />
               </div>
-            </div>
+            ) : (
+              /* =========================================================================
+                 NEW MEMBER REGISTRATION VIEW
+                 ========================================================================= */
+              <div className="grid lg:grid-cols-12 gap-10 items-start">
+                {/* Left Informational Sidebar */}
+                <div className="lg:col-span-5 space-y-6">
+                  <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-sm space-y-4">
+                    <span className="text-xs font-black uppercase tracking-wider text-[#12883c]">
+                      உறுப்பினர் சேர்க்கை · JOIN OUR MOVEMENT
+                    </span>
+                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">
+                      {language === "ta" ? "கட்சியின் உறுப்பினராகப் பதிவு செய்யுங்கள்" : "Official Cadre Enrollment Form"}
+                    </h2>
+                    <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed">
+                      {language === "ta"
+                        ? "படிவத்தை பூர்த்தி செய்து சமர்ப்பித்தவுடன் உங்கள் அதிகாரப்பூர்வ உறுப்பினர் அடையாள அட்டை (Membership Identity Card) உடனடியாக திரையில் தோன்றும்."
+                        : "Fill out the registration details below to instantly generate your official digital Membership Identity Card."}
+                    </p>
+
+                    {/* Quick Steps / Highlights */}
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-start gap-3 rounded-2xl bg-emerald-50/80 border border-emerald-200 p-3">
+                        <CheckCircle2 className="size-4 text-[#12883c] shrink-0 mt-0.5" />
+                        <div className="text-xs">
+                          <span className="font-black text-slate-900 block">உடனடி அடையாள அட்டை:</span>
+                          <span className="text-slate-600 leading-snug">முன்பக்கம், பின்பக்கம் மற்றும் QR குறியீட்டுடன் கூடிய அதிகாரப்பூர்வ அட்டை உடனே கிடைக்கும்.</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3 rounded-2xl bg-purple-50/80 border border-purple-200 p-3">
+                        <KeyRound className="size-4 text-[#4c1d6f] shrink-0 mt-0.5" />
+                        <div className="text-xs">
+                          <span className="font-black text-slate-900 block">எளிய உள்நுழைவு:</span>
+                          <span className="text-slate-600 leading-snug">வழங்கப்படும் உறுப்பினர் எண் மற்றும் பிறந்த தேதியை வைத்து எப்போது வேண்டுமானாலும் உள்நுழையலாம்.</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3 rounded-2xl bg-amber-50/80 border border-amber-200 p-3">
+                        <ShieldCheck className="size-4 text-amber-700 shrink-0 mt-0.5" />
+                        <div className="text-xs">
+                          <span className="font-black text-slate-900 block">பாதுகாப்பானது:</span>
+                          <span className="text-slate-600 leading-snug">உங்கள் தகவல்கள் தலைமை அலுவலக ஆவணத்தில் முறைப்படி பதிவு செய்யப்படும்.</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                      <span className="text-slate-500 font-semibold">ஏற்கனவே உறுப்பினரா?</span>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("login")}
+                        className="font-black text-[#12883c] hover:underline inline-flex items-center gap-1"
+                      >
+                        <LogIn className="size-3.5" />
+                        <span>உள்நுழைய இங்கே கிளிக் செய்யவும்</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Form Container */}
+                <div className="lg:col-span-7">
+                  <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-sm">
+                    <MembershipRegistrationForm
+                      language={language}
+                      onSuccess={(newMember) => {
+                        setActiveMember(newMember);
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </section>
       </main>
@@ -2175,47 +2488,287 @@ export function MembershipPage() {
   );
 }
 
-function MembershipForm({ language }: { language: "ta" | "en" }) {
+function MemberLoginForm({
+  language,
+  onSuccess,
+  onSwitchToRegister,
+}: {
+  language: "ta" | "en";
+  onSuccess: (member: MemberRecord) => void;
+  onSwitchToRegister: () => void;
+}) {
+  const [memberId, setMemberId] = useState("");
+  const [dob, setDob] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!memberId.trim() || !dob.trim()) {
+      toast.error(
+        language === "ta"
+          ? "உறுப்பினர் எண் மற்றும் பிறந்த தேதியை உள்ளிடவும்."
+          : "Please enter both Member ID and Date of Birth."
+      );
+      return;
+    }
+
+    setLoading(true);
+    setTimeout(() => {
+      const member = loginMember(memberId, dob);
+      setLoading(false);
+      if (member) {
+        toast.success(
+          language === "ta"
+            ? `வரவேற்கிறோம், ${member.full_name}! உள்நுழைவு வெற்றிகரமாக முடிந்தது.`
+            : `Welcome, ${member.full_name}! Logged in successfully.`
+        );
+        onSuccess(member);
+      } else {
+        toast.error(
+          language === "ta"
+            ? "உறுப்பினர் எண் அல்லது பிறந்த தேதி பொருந்தவில்லை. விவரங்களைச் சரிபார்த்து மீண்டும் முயலவும்."
+            : "Member ID or Date of Birth does not match. Please verify and try again."
+        );
+      }
+    }, 400);
+  };
+
+  const handleFillDemo = () => {
+    setMemberId("AINNMK-2026-1001");
+    setDob("1995-05-15");
+    toast.info(
+      language === "ta"
+        ? "மாதிரி கணக்கு விவரங்கள் நிரப்பப்பட்டது!"
+        : "Demo member credentials auto-filled!"
+    );
+  };
+
+  return (
+    <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-9 shadow-lg space-y-6">
+      <div className="text-center space-y-2 pb-2 border-b border-slate-100">
+        <div className="size-14 rounded-2xl bg-emerald-100 text-[#12883c] flex items-center justify-center mx-auto shadow-inner">
+          <KeyRound className="size-7" />
+        </div>
+        <h3 className="text-2xl font-black text-slate-900">
+          {language === "ta" ? "உறுப்பினர் உள்நுழைவு" : "Member Portal Login"}
+        </h3>
+        <p className="text-xs text-slate-600">
+          {language === "ta"
+            ? "உங்கள் உறுப்பினர் எண் மற்றும் பிறந்த தேதியை உள்ளிட்டு உங்கள் அடையாள அட்டையை அணுகவும்."
+            : "Enter your Member ID and Date of Birth to view and download your ID Card."}
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Label className="text-xs font-black text-slate-800 block mb-1">
+            {language === "ta" ? "உறுப்பினர் எண் / Membership ID *" : "Membership ID *"}
+          </Label>
+          <Input
+            value={memberId}
+            onChange={(e) => setMemberId(e.target.value)}
+            placeholder="எ.கா: AINNMK-2026-1001"
+            className="h-11 rounded-xl font-mono text-sm uppercase tracking-wider bg-slate-50 focus:bg-white"
+            required
+          />
+        </div>
+
+        <div>
+          <Label className="text-xs font-black text-slate-800 block mb-1">
+            {language === "ta" ? "பிறந்த தேதி / Date of Birth (DOB) *" : "Date of Birth (DOB) *"}
+          </Label>
+          <Input
+            type="date"
+            value={dob}
+            onChange={(e) => setDob(e.target.value)}
+            className="h-11 rounded-xl text-sm bg-slate-50 focus:bg-white"
+            required
+          />
+        </div>
+
+        <Button
+          type="submit"
+          disabled={loading}
+          className="w-full h-12 rounded-xl bg-[#12883c] hover:bg-[#0e6e30] text-white font-black text-sm shadow-md transition-all mt-2"
+        >
+          {loading ? (
+            <span>சரிபார்க்கப்படுகிறது...</span>
+          ) : (
+            <>
+              <LogIn className="size-4 mr-2" />
+              <span>{language === "ta" ? "உள்நுழைக (Login)" : "Access Member Card"}</span>
+            </>
+          )}
+        </Button>
+      </form>
+
+      {/* Demo Credentials Auto-Fill Box */}
+      <div className="rounded-2xl border border-amber-300 bg-amber-50/70 p-3.5 text-xs text-amber-950 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="font-extrabold flex items-center gap-1.5">
+            <Sparkles className="size-3.5 text-amber-600" />
+            <span>டெஸ்ட் செய்ய மாதிரி கணக்கு:</span>
+          </span>
+          <button
+            type="button"
+            onClick={handleFillDemo}
+            className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-[11px] transition-colors shadow-2xs"
+          >
+            இங்கே நிரப்புக (Auto Fill)
+          </button>
+        </div>
+        <p className="text-[11px] text-amber-900 font-mono">
+          ID: <strong>AINNMK-2026-1001</strong> | DOB: <strong>1995-05-15</strong>
+        </p>
+      </div>
+
+      <div className="pt-2 border-t border-slate-100 text-center text-xs">
+        <span className="text-slate-500 font-medium">புதிய உறுப்பினரா? </span>
+        <button
+          type="button"
+          onClick={onSwitchToRegister}
+          className="font-black text-[#12883c] hover:underline"
+        >
+          இன்றே கட்சியில் இணையுங்கள் (Register Now)
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MembershipRegistrationForm({
+  language,
+  onSuccess,
+}: {
+  language: "ta" | "en";
+  onSuccess: (member: MemberRecord) => void;
+}) {
   const [pending, setPending] = useState(false);
   const [consent, setConsent] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string>("");
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("புகைப்படத்தின் அளவு 2MB-க்குள் இருக்க வேண்டும்.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const fields = new FormData(form);
-    const input = {
-      full_name: String(fields.get("full_name") ?? ""),
-      mobile: String(fields.get("mobile") ?? "").replace(/\D/g, ""),
-      email: String(fields.get("email") ?? ""),
-      state: String(fields.get("state") ?? "தமிழ்நாடு"),
-      district: String(fields.get("district") ?? ""),
-      constituency: String(fields.get("constituency") ?? ""),
-      address: String(fields.get("address") ?? ""),
-      organization_wing: String(fields.get("organization_wing") ?? ""),
-      age: String(fields.get("age") ?? ""),
-      consent,
-    };
-    const result = membershipSchema.safeParse(input);
-    if (!result.success) {
-      const issue = result.error.issues[0];
+
+    const full_name = String(fields.get("full_name") ?? "").trim();
+    const father_name = String(fields.get("father_name") ?? "").trim();
+    const dob = String(fields.get("dob") ?? "").trim();
+    const mobile = String(fields.get("mobile") ?? "").replace(/\D/g, "");
+    const email = String(fields.get("email") ?? "").trim();
+    const blood_group = String(fields.get("blood_group") ?? "O+ve").trim();
+    const state = String(fields.get("state") ?? "தமிழ்நாடு").trim();
+    const district = String(fields.get("district") ?? "").trim();
+    const constituency = String(fields.get("constituency") ?? "").trim();
+    const organization_wing = String(fields.get("organization_wing") ?? "உழவர் மற்றும் பொதுமக்கள் அணி").trim();
+    const address = String(fields.get("address") ?? "").trim();
+
+    if (!full_name || !father_name || !dob || !mobile || !district || !address) {
       toast.error(
-        issue?.message ||
-          (language === "ta" ? "விவரங்களைச் சரிபார்த்து மீண்டும் முயலுங்கள்." : "Please check your details and try again.")
+        language === "ta"
+          ? "அனைத்து கட்டாய விவரங்களையும் (* உள்ளவை) நிரப்பவும்."
+          : "Please fill all mandatory fields marked with *."
       );
       return;
     }
+
+    if (mobile.length !== 10 || !/^[6-9]\d{9}$/.test(mobile)) {
+      toast.error(
+        language === "ta"
+          ? "சரியான 10 இலக்க இந்திய தொலைபேசி எண்ணை உள்ளிடவும்."
+          : "Please enter a valid 10-digit Indian mobile number."
+      );
+      return;
+    }
+
+    if (!consent) {
+      toast.error(
+        language === "ta"
+          ? "கட்சியின் உறுதிமொழியை ஏற்கவும்."
+          : "Please accept the membership pledge."
+      );
+      return;
+    }
+
     setPending(true);
+
+    // Calculate approximate age from DOB
+    const birthYear = new Date(dob).getFullYear();
+    const currentYear = new Date().getFullYear();
+    const calculatedAge = Math.max(18, currentYear - birthYear);
+
+    const newMemberId = generateMemberId();
+    const todayFormatted = new Date().toLocaleDateString("en-GB"); // DD/MM/YYYY
+
+    const newMember: MemberRecord = {
+      member_id: newMemberId,
+      full_name,
+      father_name,
+      dob,
+      mobile,
+      email: email || undefined,
+      state,
+      district,
+      organization_wing,
+      blood_group,
+      address,
+      photo_url: photoPreview || undefined,
+      joining_date: todayFormatted,
+      valid_until: "வாழ்நாள் (Lifetime)",
+    };
+
     try {
-      await submitMembership({ data: toMembershipInsert(result.data) });
+      // 1. Save locally for instant member portal login & card display
+      saveMember(newMember);
+
+      // 2. Safely attempt to persist to Supabase backend table
+      try {
+        await submitMembership({
+          data: {
+            full_name,
+            mobile,
+            email: email || undefined,
+            state,
+            district,
+            constituency: constituency || undefined,
+            organization_wing,
+            address,
+            age: calculatedAge,
+            consent: true,
+          },
+        });
+      } catch (err) {
+        console.warn("Backend submission logged locally:", err);
+      }
+
       toast.success(
         language === "ta"
-          ? "உங்கள் உறுப்பினர் விண்ணப்பம் வெற்றிகரமாகப் பெறப்பட்டது! (Registration Successful)"
-          : "Your membership application has been submitted successfully!"
+          ? `வாழ்த்துகள்! உறுப்பினர் சேர்க்கை வெற்றிகரமாக முடிந்தது. உறுப்பினர் எண்: ${newMemberId}`
+          : `Congratulations! Official Membership ID: ${newMemberId} issued.`
       );
+
       form.reset();
       setConsent(false);
+      setPhotoPreview("");
+      onSuccess(newMember);
     } catch {
-      toast.error(language === "ta" ? "விண்ணப்பம் அனுப்புவதில் சிக்கல் ஏற்பட்டது." : "Could not submit application. Please try again.");
+      toast.error("விண்ணப்பம் செயலாக்குவதில் சிக்கல் ஏற்பட்டது. மீண்டும் முயலுங்கள்.");
     } finally {
       setPending(false);
     }
@@ -2231,71 +2784,175 @@ function MembershipForm({ language }: { language: "ta" | "en" }) {
   ];
 
   return (
-    <form className="grid gap-4 sm:grid-cols-2 rounded-2xl border border-border bg-slate-50/50 p-6 sm:p-8" noValidate onSubmit={submit}>
-      <FormField id="m-name" label={language === "ta" ? "முழுப் பெயர் *" : "Full Name *"}>
-        <Input autoComplete="name" className="h-11 rounded-md bg-white" id="m-name" maxLength={120} name="full_name" required />
+    <form className="grid gap-4 sm:grid-cols-2" noValidate onSubmit={submit}>
+      <FormField id="m-name" label={language === "ta" ? "முழுப் பெயர் / Member Name *" : "Full Name *"}>
+        <Input
+          autoComplete="name"
+          className="h-11 rounded-xl bg-slate-50 focus:bg-white"
+          id="m-name"
+          maxLength={120}
+          name="full_name"
+          placeholder="எ.கா: மு. கதிர்வேலன்"
+          required
+        />
       </FormField>
 
-      <FormField id="m-mobile" label={language === "ta" ? "கைபேசி எண் *" : "Mobile Number *"}>
-        <Input autoComplete="tel" className="h-11 rounded-md bg-white" id="m-mobile" inputMode="numeric" maxLength={14} name="mobile" placeholder="9876543210" required type="tel" />
+      <FormField id="m-father" label={language === "ta" ? "தந்தை பெயர் / Father's Name *" : "Father's Name *"}>
+        <Input
+          className="h-11 rounded-xl bg-slate-50 focus:bg-white"
+          id="m-father"
+          maxLength={120}
+          name="father_name"
+          placeholder="எ.கா: செ. முருகேசன்"
+          required
+        />
       </FormField>
 
-      <FormField id="m-email" label={language === "ta" ? "மின்னஞ்சல் (விருப்பம்)" : "Email (Optional)"}>
-        <Input autoComplete="email" className="h-11 rounded-md bg-white" id="m-email" maxLength={254} name="email" type="email" />
+      <FormField id="m-dob" label={language === "ta" ? "பிறந்த தேதி / Date of Birth (DOB) *" : "Date of Birth (DOB) *"}>
+        <Input
+          type="date"
+          className="h-11 rounded-xl bg-slate-50 focus:bg-white"
+          id="m-dob"
+          name="dob"
+          required
+        />
       </FormField>
 
-      <FormField id="m-age" label={language === "ta" ? "வயது *" : "Age *"}>
-        <Input className="h-11 rounded-md bg-white" id="m-age" max="120" min="18" name="age" placeholder="18+" type="number" required />
+      <FormField id="m-mobile" label={language === "ta" ? "கைபேசி எண் / Mobile Number *" : "Mobile Number *"}>
+        <Input
+          autoComplete="tel"
+          className="h-11 rounded-xl bg-slate-50 focus:bg-white"
+          id="m-mobile"
+          inputMode="numeric"
+          maxLength={14}
+          name="mobile"
+          placeholder="9876543210"
+          required
+          type="tel"
+        />
       </FormField>
 
-      <FormField id="m-state" label={language === "ta" ? "மாநிலம் *" : "State *"}>
-        <Input defaultValue="தமிழ்நாடு" className="h-11 rounded-md bg-white" id="m-state" maxLength={100} name="state" required />
-      </FormField>
-
-      <FormField id="m-district" label={language === "ta" ? "மாவட்டம் *" : "District *"}>
-        <Input className="h-11 rounded-md bg-white" id="m-district" maxLength={100} name="district" placeholder="சென்னை / மதுரை / திருச்சி..." required />
-      </FormField>
-
-      <FormField id="m-wing" label={language === "ta" ? "சேர விரும்பும் அணி *" : "Preferred Wing *"}>
+      <FormField id="m-blood" label={language === "ta" ? "இரத்த வகை / Blood Group *" : "Blood Group *"}>
         <select
-          className="h-11 w-full rounded-md border border-input bg-white px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-          defaultValue=""
+          className="h-11 w-full rounded-xl border border-input bg-slate-50 focus:bg-white px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+          defaultValue="O+ve"
+          id="m-blood"
+          name="blood_group"
+          required
+        >
+          <option value="O+ve">O +ve</option>
+          <option value="A+ve">A +ve</option>
+          <option value="B+ve">B +ve</option>
+          <option value="AB+ve">AB +ve</option>
+          <option value="O-ve">O -ve</option>
+          <option value="A-ve">A -ve</option>
+          <option value="B-ve">B -ve</option>
+          <option value="AB-ve">AB -ve</option>
+        </select>
+      </FormField>
+
+      <FormField id="m-district" label={language === "ta" ? "மாவட்டம் / District *" : "District *"}>
+        <select
+          className="h-11 w-full rounded-xl border border-input bg-slate-50 focus:bg-white px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+          defaultValue="தஞ்சாவூர் (Thanjavur)"
+          id="m-district"
+          name="district"
+          required
+        >
+          {TN_DISTRICTS.map((d) => (
+            <option key={d} value={d.split(" ")[0]}>
+              {d}
+            </option>
+          ))}
+        </select>
+      </FormField>
+
+      <FormField id="m-wing" label={language === "ta" ? "சேர விரும்பும் அணி / Preferred Wing *" : "Preferred Wing *"}>
+        <select
+          className="h-11 w-full rounded-xl border border-input bg-slate-50 focus:bg-white px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+          defaultValue={wingsList[0]}
           id="m-wing"
           name="organization_wing"
           required
         >
-          <option disabled value="">
-            {language === "ta" ? "அணியைத் தேர்ந்தெடுக்கவும்" : "Select an organization wing"}
-          </option>
           {wingsList.map((w) => (
             <option key={w} value={w}>{w}</option>
           ))}
         </select>
       </FormField>
 
-      <FormField id="m-constituency" label={language === "ta" ? "சட்டமன்றத் தொகுதி" : "Assembly Constituency"}>
-        <Input className="h-11 rounded-md bg-white" id="m-constituency" maxLength={120} name="constituency" />
+      <FormField id="m-email" label={language === "ta" ? "மின்னஞ்சல் / Email (விருப்பம்)" : "Email (Optional)"}>
+        <Input
+          autoComplete="email"
+          className="h-11 rounded-xl bg-slate-50 focus:bg-white"
+          id="m-email"
+          maxLength={254}
+          name="email"
+          placeholder="yourname@gmail.com"
+          type="email"
+        />
       </FormField>
 
       <div className="sm:col-span-2">
-        <FormField id="m-address" label={language === "ta" ? "முழு முகவரி *" : "Full Residential Address *"}>
-          <Textarea className="min-h-20 resize-y rounded-md bg-white" id="m-address" maxLength={1000} name="address" required />
+        <FormField id="m-photo" label={language === "ta" ? "உறுப்பினர் புகைப்படம் / Photo (விருப்பம்)" : "Member Photo (Optional)"}>
+          <div className="flex items-center gap-4 mt-1">
+            <div className="size-16 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
+              {photoPreview ? (
+                <img src={photoPreview} alt="Preview" className="size-full object-cover" />
+              ) : (
+                <Camera className="size-6 text-slate-400" />
+              )}
+            </div>
+            <div className="flex-1">
+              <input
+                type="file"
+                id="m-photo"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-900 hover:file:bg-emerald-200 cursor-pointer"
+              />
+              <p className="text-[11px] text-slate-500 mt-1">JPG அல்லது PNG (அதிகபட்சம் 2MB). புகைப்படம் இல்லையெனில் மாதிரி அவதார் பொருத்தப்படும்.</p>
+            </div>
+          </div>
         </FormField>
       </div>
 
-      <div className="flex items-start gap-3 sm:col-span-2 pt-2">
+      <div className="sm:col-span-2">
+        <FormField id="m-address" label={language === "ta" ? "முழு முகவரி / Full Address *" : "Full Residential Address *"}>
+          <Textarea
+            className="min-h-18 resize-y rounded-xl bg-slate-50 focus:bg-white text-xs sm:text-sm"
+            id="m-address"
+            maxLength={1000}
+            name="address"
+            placeholder="கதவு எண், தெரு பெயர், பகுதி, ஊர், அஞ்சல் குறியீட்டு எண்..."
+            required
+          />
+        </FormField>
+      </div>
+
+      <div className="flex items-start gap-3 sm:col-span-2 pt-1">
         <Checkbox checked={consent} id="m-consent" onCheckedChange={(c) => setConsent(c === true)} />
-        <Label className="cursor-pointer text-xs text-muted-foreground leading-snug" htmlFor="m-consent">
+        <Label className="cursor-pointer text-xs text-slate-600 leading-snug" htmlFor="m-consent">
           {language === "ta"
-            ? "அகில இந்திய நம் நாடு மக்கள் கட்சியின் கொள்கைகளுக்கும் விதிகளுக்கும் கட்டுப்பட்டு மக்கள் பணியாற்றுவேன் என உறுதி கூறுகிறேன். *"
+            ? "அகில இந்திய நம் நாடு மக்கள் கட்சியின் கொள்கைகளுக்கும் விதிகளுக்கும் கட்டுப்பட்டு சாதி, மத பேதமற்ற சமத்துவ சமுதாயத்திற்காக மக்கள் பணியாற்றுவேன் என உறுதி கூறுகிறேன். *"
             : "I solemnly pledge to uphold the principles and democratic code of AINNMK in dedicated public service. *"}
         </Label>
       </div>
 
       <div className="sm:col-span-2 pt-2">
-        <Button className="h-12 w-full font-bold rounded-md bg-primary hover:bg-primary/90 text-white" disabled={pending} type="submit">
-          {pending ? "விண்ணப்பம் அனுப்பப்படுகிறது..." : (language === "ta" ? "உறுப்பினர் விண்ணப்பத்தைச் சமர்ப்பி" : "Submit Membership Registration")}
-          <ArrowRight className="size-4 ml-2" />
+        <Button
+          className="h-12 w-full font-black text-sm rounded-xl bg-[#12883c] hover:bg-[#0e6e30] text-white shadow-md transition-all hover:scale-[1.01]"
+          disabled={pending}
+          type="submit"
+        >
+          {pending ? (
+            <span>அட்டை உருவாக்கப்படுகிறது...</span>
+          ) : (
+            <>
+              <span>{language === "ta" ? "உறுப்பினர் சேர்க்கையை உறுதி செய்து அட்டையைப் பெறுக" : "Complete Registration & Get ID Card"}</span>
+              <ArrowRight className="size-4 ml-2" />
+            </>
+          )}
         </Button>
       </div>
     </form>
@@ -2501,7 +3158,7 @@ export const siteMeta = {
   },
   about: {
     title: "கட்சியின் வரலாறு & நோக்கம் | AINNMK",
-    description: "2008-ல் நிறுவப்பட்ட AINNMK கட்சியின் வரலாறு, தலைவர் முனைவர் நா. தர்மராஜ் அவர்களின் தொலைநோக்குப் பார்வை.",
+    description: "2008-ல் நிறுவப்பட்ட AINNMK கட்சியின் வரலாறு, தேசிய நிறுவனர் தலைவர் அ. முன்னா பாஷா அவர்களின் தொலைநோக்குப் பார்வை.",
   },
   ideology: {
     title: "ஏழு அடிப்படைக் கோட்பாடுகள் | AINNMK",

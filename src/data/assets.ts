@@ -1,5 +1,5 @@
 export const partyLogoImg = "/assets/image.png";
-export const leaderImg = "/assets/leader.jpg";
+export const leaderImg = "/munna.png";
 export const rallyImg = "/assets/rally.jpg";
 export const farmersImg = "/assets/farmers.jpg";
 export const womenImg = "/assets/women.jpg";
@@ -8,6 +8,7 @@ export const socialServiceImg = "/assets/social_service.jpg";
 
 export const ASSET_MAP: Record<string, string> = {
   "leader.jpg": leaderImg,
+  "munna.png": leaderImg,
   "rally.jpg": rallyImg,
   "farmers.jpg": farmersImg,
   "women.jpg": womenImg,
