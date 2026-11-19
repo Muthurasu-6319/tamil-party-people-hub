@@ -452,7 +452,7 @@ export function SiteHeader() {
       </div>
 
       {/* Main Navigation Header */}
-      <header className="sticky top-0 z-40 w-full border-b border-slate-200/90 bg-white shadow-xs overflow-hidden">
+      <header className="sticky top-0 z-50 w-full border-b border-slate-200/90 bg-white shadow-xs">
         <div className="w-full flex min-h-[64px] sm:min-h-[74px] items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 xl:px-8 2xl:px-12 max-w-full">
           <Link aria-label="AINNMK Home" className="flex min-w-0 items-center gap-2 sm:gap-3 group shrink" to="/">
             <BrandMark className="size-10 sm:size-12 drop-shadow-xs group-hover:scale-105 transition-transform shrink-0" />
