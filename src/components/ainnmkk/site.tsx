@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
+import { ManifestoView } from "@/components/ainnmkk/ManifestoPage";
 import {
   ArrowDown,
   ArrowRight,
@@ -17,6 +18,7 @@ import {
   ExternalLink,
   Eye,
   Facebook,
+  FileText,
   Flag,
   Globe,
   GraduationCap,
@@ -81,6 +83,9 @@ import {
 import {
   partyLogoImg,
   leaderImg,
+  jaiBabuImg,
+  anandJiImg,
+  pavanJiImg,
   rallyImg,
   farmersImg,
   womenImg,
@@ -169,6 +174,12 @@ export const headerNavConfig: HeaderNavItem[] = [
         description: { ta: "நமது அடிப்படைக் கொள்கைகள்", en: "Core party principles" },
         icon: Sprout,
       },
+      {
+        href: "/therthal-vakkuruthi",
+        label: { ta: "தேர்தல் வாக்குறுதி", en: "Therthal Vakkuruthi" },
+        description: { ta: "கட்சியின் 10 அதிகாரப்பூர்வ தேர்தல் வாக்குறுதிகள்", en: "10 official election promises" },
+        icon: FileText,
+      },
     ],
   },
   {
@@ -225,6 +236,7 @@ const navItems: { href: string; label: TextPair }[] = [
   { href: "/leadership", label: { ta: "தலைமை", en: "Leadership" } },
   { href: "/organization", label: { ta: "அமைப்பு", en: "Organization" } },
   { href: "/ideology", label: { ta: "கொள்கைகள்", en: "Principles" } },
+  { href: "/therthal-vakkuruthi", label: { ta: "தேர்தல் வாக்குறுதி", en: "Manifesto" } },
   { href: "/news", label: { ta: "செய்திகள்", en: "News" } },
   { href: "/events", label: { ta: "நிகழ்வுகள்", en: "Events" } },
   { href: "/gallery", label: { ta: "படத்தொகுப்பு", en: "Gallery" } },
@@ -715,6 +727,9 @@ export function SiteFooter() {
               <Link className="text-slate-400 hover:text-white transition-colors" to="/ideology">
                 {language === "ta" ? "ஏழு கோட்பாடுகள்" : "7 Principles"}
               </Link>
+              <Link className="text-slate-400 hover:text-white transition-colors" to="/therthal-vakkuruthi">
+                {language === "ta" ? "தேர்தல் வாக்குறுதி" : "Election Manifesto"}
+              </Link>
               <Link className="text-slate-400 hover:text-white transition-colors" to="/gallery">
                 {language === "ta" ? "படத்தொகுப்பு" : "Photo Gallery"}
               </Link>
@@ -783,43 +798,78 @@ export function HomePage() {
   const { language } = useSiteLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  const heroSlides = [
+    {
+      src: "/hero-banner.jpg",
+      alt: "மக்களுக்காக... மக்களுடன்... என்னூறும்... | அகில இந்திய நமது மக்கள் கட்சி",
+    },
+    {
+      src: "/hero-banner-2.jpg",
+      alt: "விவசாயியின் வாழ்வே நாட்டின் வாழ்வு | விவசாயிகளின் நலனுக்காக — அகில இந்திய நம் நாடு மக்கள் கட்சி",
+    },
+    {
+      src: "/hero-banner-3.jpg",
+      alt: "மக்கள் நலனே எங்கள் இலக்கு... நாம் சேர்ந்து நாம் வளர்வோம்! — அகில இந்திய நம் நாடு மக்கள் கட்சி",
+    },
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [heroSlides.length]);
+
   return (
     <>
       <SiteHeader />
       <main className="w-full max-w-full overflow-x-hidden">
         {/* =========================================================================
-            HERO BANNER SECTION - EXACT REFERENCE LAYOUT WITH BANNER.PNG
+            HERO BANNER SECTION - 2-SLIDE CAROUSEL
             ========================================================================= */}
         <section className="relative w-full overflow-hidden bg-white border-b border-slate-200">
-          <div className="relative w-full aspect-[2164/726]">
-            <img
-              src="/banner.png"
-              alt="நம் தாய்நாடு – நம் குடும்பம் | அகில இந்திய நம் நாடு மக்கள் கட்சி"
-              className="w-full h-auto block select-none"
-            />
+          <div className="relative w-full">
+            <div
+              className="flex transition-transform duration-700 ease-out"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+            >
+              {heroSlides.map((slide, idx) => (
+                <div key={slide.src} className="w-full shrink-0 relative">
+                  <img
+                    src={slide.src}
+                    alt={slide.alt}
+                    className="w-full h-auto block select-none"
+                  />
 
-            {/* Overlaid Action Buttons (Placed right below the slogan text on the left) */}
-            <div className="absolute left-[3%] sm:left-[4.5%] md:left-[5%] bottom-[8%] sm:bottom-[12%] md:bottom-[15%] lg:bottom-[17%] z-10 flex flex-wrap items-center gap-2 sm:gap-3.5">
-              <Link
-                to="/about"
-                className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-[#12883c] hover:bg-[#0e6e30] px-3 py-1.5 sm:px-5 sm:py-2.5 md:px-6 md:py-3 text-[11px] sm:text-xs md:text-sm font-bold text-white shadow-lg shadow-emerald-950/20 transition-all hover:scale-105 active:scale-95"
-              >
-                <span>எங்கள் கட்சியை பற்றி</span>
-                <ArrowRight className="size-3.5 sm:size-4" />
-              </Link>
-              <Link
-                to="/news"
-                className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-white hover:bg-slate-50 px-3 py-1.5 sm:px-5 sm:py-2.5 md:px-6 md:py-3 text-[11px] sm:text-xs md:text-sm font-bold text-slate-800 shadow-lg shadow-slate-900/10 border border-slate-200/90 transition-all hover:scale-105 active:scale-95"
-              >
-                <span>செய்திகளை பார்க்க</span>
-                <ArrowRight className="size-3.5 sm:size-4" />
-              </Link>
+                  {/* Overlaid Action Buttons on Slide 1 only (keeps Slide 2 farmer icons unobstructed) */}
+                  {idx === 0 && (
+                    <div className="absolute left-[24%] sm:left-[25%] bottom-[15%] sm:bottom-[18%] z-10 hidden sm:flex flex-wrap items-center gap-2 sm:gap-3.5">
+                      <Link
+                        to="/about"
+                        className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-[#12883c] hover:bg-[#0e6e30] px-4 py-2 md:px-6 md:py-2.5 text-xs md:text-sm font-bold text-white shadow-lg shadow-emerald-950/25 transition-all hover:scale-105 active:scale-95"
+                      >
+                        <span>எங்கள் கட்சியை பற்றி</span>
+                        <ArrowRight className="size-3.5 sm:size-4" />
+                      </Link>
+                      <Link
+                        to="/news"
+                        className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-white hover:bg-slate-50 px-4 py-2 md:px-6 md:py-2.5 text-xs md:text-sm font-bold text-slate-800 shadow-lg shadow-slate-900/15 border border-slate-200/90 transition-all hover:scale-105 active:scale-95"
+                      >
+                        <span>செய்திகளை பார்க்க</span>
+                        <ArrowRight className="size-3.5 sm:size-4" />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
 
             {/* Carousel Navigation Chevrons */}
             <button
               type="button"
-              onClick={() => setCurrentSlide((prev) => (prev > 0 ? prev - 1 : 3))}
+              onClick={() =>
+                setCurrentSlide((prev) => (prev > 0 ? prev - 1 : heroSlides.length - 1))
+              }
               aria-label="Previous Slide"
               className="absolute left-2.5 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 z-10 size-7 sm:size-9 md:size-10 rounded-full bg-slate-900/60 hover:bg-slate-900/80 text-white flex items-center justify-center backdrop-blur-xs transition-colors shadow-md"
             >
@@ -827,7 +877,7 @@ export function HomePage() {
             </button>
             <button
               type="button"
-              onClick={() => setCurrentSlide((prev) => (prev < 3 ? prev + 1 : 0))}
+              onClick={() => setCurrentSlide((prev) => (prev + 1) % heroSlides.length)}
               aria-label="Next Slide"
               className="absolute right-2.5 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-10 size-7 sm:size-9 md:size-10 rounded-full bg-slate-900/60 hover:bg-slate-900/80 text-white flex items-center justify-center backdrop-blur-xs transition-colors shadow-md"
             >
@@ -836,30 +886,19 @@ export function HomePage() {
 
             {/* Carousel Indicator Dots */}
             <div className="absolute bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 sm:gap-2">
-              <button
-                type="button"
-                onClick={() => setCurrentSlide(0)}
-                aria-label="Go to slide 1"
-                className={`transition-all ${currentSlide === 0 ? "h-1.5 sm:h-2 w-5 sm:w-7 rounded-full bg-white shadow-xs" : "size-1.5 sm:size-2 rounded-full bg-white/60 hover:bg-white"}`}
-              />
-              <button
-                type="button"
-                onClick={() => setCurrentSlide(1)}
-                aria-label="Go to slide 2"
-                className={`transition-all ${currentSlide === 1 ? "h-1.5 sm:h-2 w-5 sm:w-7 rounded-full bg-white shadow-xs" : "size-1.5 sm:size-2 rounded-full bg-white/60 hover:bg-white"}`}
-              />
-              <button
-                type="button"
-                onClick={() => setCurrentSlide(2)}
-                aria-label="Go to slide 3"
-                className={`transition-all ${currentSlide === 2 ? "h-1.5 sm:h-2 w-5 sm:w-7 rounded-full bg-white shadow-xs" : "size-1.5 sm:size-2 rounded-full bg-white/60 hover:bg-white"}`}
-              />
-              <button
-                type="button"
-                onClick={() => setCurrentSlide(3)}
-                aria-label="Go to slide 4"
-                className={`transition-all ${currentSlide === 3 ? "h-1.5 sm:h-2 w-5 sm:w-7 rounded-full bg-white shadow-xs" : "size-1.5 sm:size-2 rounded-full bg-white/60 hover:bg-white"}`}
-              />
+              {heroSlides.map((slide, idx) => (
+                <button
+                  key={slide.src}
+                  type="button"
+                  onClick={() => setCurrentSlide(idx)}
+                  aria-label={`Go to slide ${idx + 1}`}
+                  className={`transition-all ${
+                    currentSlide === idx
+                      ? "h-1.5 sm:h-2 w-5 sm:w-7 rounded-full bg-white shadow-xs"
+                      : "size-1.5 sm:size-2 rounded-full bg-white/60 hover:bg-white"
+                  }`}
+                />
+              ))}
             </div>
           </div>
         </section>
@@ -1033,23 +1072,23 @@ export function HomePage() {
                     </Link>
                     <Link to="/leadership" className="group flex flex-col items-center">
                       <img
-                        src={womenImg}
-                        alt="Adv. S. Anbarasi"
-                        className="size-14 sm:size-16 rounded-xl object-cover object-top border-2 border-slate-200 shadow-xs group-hover:scale-105 transition-transform"
+                        src={jaiBabuImg}
+                        alt="K. Dilli Babu (a) Jai Babu"
+                        className="size-14 sm:size-16 rounded-xl object-cover object-top border-2 border-amber-400/80 shadow-xs group-hover:scale-105 transition-transform"
                       />
                     </Link>
                     <Link to="/leadership" className="group flex flex-col items-center">
                       <img
-                        src={youthImg}
-                        alt="Er. R. Karthikeyan"
-                        className="size-14 sm:size-16 rounded-xl object-cover object-top border-2 border-slate-200 shadow-xs group-hover:scale-105 transition-transform"
+                        src={anandJiImg}
+                        alt="K. Arumugam (a) Anand Ji"
+                        className="size-14 sm:size-16 rounded-xl object-cover object-top border-2 border-amber-400/80 shadow-xs group-hover:scale-105 transition-transform"
                       />
                     </Link>
                     <Link to="/leadership" className="group flex flex-col items-center">
                       <img
-                        src={farmersImg}
-                        alt="Farmer V. Selvam"
-                        className="size-14 sm:size-16 rounded-xl object-cover object-top border-2 border-slate-200 shadow-xs group-hover:scale-105 transition-transform"
+                        src={pavanJiImg}
+                        alt="P. Punitha Vel (a) Pavan Ji"
+                        className="size-14 sm:size-16 rounded-xl object-cover object-top border-2 border-amber-400/80 shadow-xs group-hover:scale-105 transition-transform"
                       />
                     </Link>
                   </div>
@@ -1082,8 +1121,8 @@ export function HomePage() {
 
                 <div className="mt-3 flex items-center gap-3">
                   <img
-                    src={rallyImg}
-                    alt="AINNMK State Meeting"
+                    src={getAssetUrl(NEWS_ARTICLES[0]?.imageKey || "news-2026-election.jpg")}
+                    alt={NEWS_ARTICLES[0]?.titleTa || "AINNMK News"}
                     className="size-20 sm:size-22 rounded-xl object-cover shrink-0 border border-slate-200"
                   />
                   <div className="flex-1 min-w-0">
@@ -1092,12 +1131,12 @@ export function HomePage() {
                       className="text-xs sm:text-[13px] font-bold text-slate-900 hover:text-[#12883c] line-clamp-2 leading-snug transition-colors"
                     >
                       {language === "ta"
-                        ? "அகில இந்திய நம் நாடு மக்கள் கட்சி மாநில அளவிலான கூட்டம் வெற்றி..."
-                        : "Statewide executive conference concludes with mass participation..."}
+                        ? NEWS_ARTICLES[0]?.titleTa
+                        : NEWS_ARTICLES[0]?.titleEn}
                     </Link>
                     <div className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
                       <CalendarDays className="size-3.5 text-slate-400" />
-                      <span>Nov 18, 2026</span>
+                      <span>{NEWS_ARTICLES[0]?.date}</span>
                     </div>
                   </div>
                 </div>
@@ -1764,38 +1803,45 @@ export function DirectoryPage({
         {kind === "leadership" && (
           <section className="py-20 px-5 sm:px-8 lg:px-12 bg-white">
             <div className="mx-auto max-w-[1360px]">
-              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {LEADERS.map((leader) => {
                   const imgUrl = getAssetUrl(leader.imageKey);
                   return (
                     <div
                       key={leader.id}
-                      className="rounded-2xl border border-border bg-slate-50/50 overflow-hidden shadow-sm hover:shadow-lg transition-all flex flex-col justify-between"
+                      className="rounded-2xl border border-border bg-white overflow-hidden shadow-sm hover:shadow-lg transition-all flex flex-col justify-between"
                     >
                       <div>
-                        <div className="h-72 w-full overflow-hidden relative">
+                        <div className="aspect-[4/5] w-full overflow-hidden bg-slate-100 border-b border-slate-200/80">
                           <img
                             src={imgUrl}
-                            alt={leader.nameTa}
+                            alt={language === "ta" ? leader.nameTa : leader.nameEn}
                             className="size-full object-cover object-top hover:scale-105 transition-transform duration-500"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent" />
-                          <div className="absolute bottom-3 left-4 right-4 text-white">
-                            <span className="text-[10px] font-bold text-brand-yellow uppercase tracking-wider block">
-                              {leader.districtTa}
-                            </span>
-                            <h3 className="font-extrabold text-lg leading-tight mt-0.5">{leader.nameTa}</h3>
-                            <p className="text-xs text-slate-300">{leader.nameEn}</p>
-                          </div>
                         </div>
 
-                        <div className="p-6 space-y-3">
-                          <div className="inline-block rounded-md bg-emerald-100 text-emerald-900 px-2.5 py-1 text-xs font-bold">
-                            {leader.roleTa}
+                        <div className="p-5 space-y-3">
+                          <div>
+                            <span className="text-[11px] font-bold text-[#12883c] uppercase tracking-wider block">
+                              {language === "ta" ? leader.districtTa : leader.districtEn}
+                            </span>
+                            <h3 className="font-black text-lg text-slate-900 leading-snug mt-0.5">
+                              {language === "ta" ? leader.nameTa : leader.nameEn}
+                            </h3>
+                            <p className="text-xs font-medium text-slate-500">
+                              {language === "ta" ? leader.nameEn : leader.nameTa}
+                            </p>
                           </div>
-                          <p className="text-xs text-slate-700 leading-relaxed">{leader.bioTa}</p>
+
+                          <div className="inline-block rounded-md bg-emerald-100 text-emerald-900 px-2.5 py-1 text-xs font-bold">
+                            {language === "ta" ? leader.roleTa : leader.roleEn}
+                          </div>
+
+                          <p className="text-xs text-slate-700 leading-relaxed">
+                            {language === "ta" ? leader.bioTa : leader.bioEn}
+                          </p>
                           <blockquote className="border-l-2 border-brand-yellow pl-3 italic text-[11px] text-slate-800">
-                            "{leader.quoteTa}"
+                            "{language === "ta" ? leader.quoteTa : leader.quoteEn}"
                           </blockquote>
                         </div>
                       </div>
@@ -3151,6 +3197,11 @@ function FormField({ id, label, children }: { id: string; label: string; childre
   );
 }
 
+export function TherthalVakkuruthiPage() {
+  const { language } = useSiteLanguage();
+  return <ManifestoView language={language} SiteHeader={SiteHeader} SiteFooter={SiteFooter} />;
+}
+
 export const siteMeta = {
   index: {
     title: "அகில இந்திய நம் நாடு மக்கள் கட்சி | AINNMK - அதிகாரப்பூர்வ இணையதளம்",
@@ -3163,6 +3214,10 @@ export const siteMeta = {
   ideology: {
     title: "ஏழு அடிப்படைக் கோட்பாடுகள் | AINNMK",
     description: "அகில இந்திய நம் நாடு மக்கள் கட்சியின் சமத்துவ சமுதாயம் மற்றும் உழவர் நலக் கொள்கை ஆவணம்.",
+  },
+  therthalVakkuruthi: {
+    title: "தேர்தல் வாக்குறுதி | அகில இந்திய நம் நாடு மக்கள் கட்சி (AINNMK)",
+    description: "கல்வி, மருத்துவம், வேலைவாய்ப்பு, விவசாயம், ஜி.எஸ்.டி நீக்கம் மற்றும் சட்டம் ஒழுங்கு குறித்த AINNMK கட்சியின் 10 அதிகாரப்பூர்வ தேர்தல் வாக்குறுதிகள்.",
   },
   leadership: {
     title: "கட்சித் தலைமைப் பொறுப்பாளர்கள் | AINNMK",

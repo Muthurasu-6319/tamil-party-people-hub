@@ -13,6 +13,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { SplashLoader } from "@/components/ainnmkk/SplashLoader";
 
 type Language = "ta" | "en";
 type LanguageContextValue = { language: Language; setLanguage: (value: Language) => void };
@@ -162,6 +163,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageContext.Provider value={{ language, setLanguage }}>
+        <SplashLoader />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         <Toaster position="top-right" />

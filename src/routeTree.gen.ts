@@ -23,6 +23,7 @@ import { Route as OrganizationRouteImport } from './routes/organization'
 import { Route as PressReleasesRouteImport } from './routes/press-releases'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TherthalVakkuruthiRouteImport } from './routes/therthal-vakkuruthi'
 import { Route as LeadershipLeaderIdRouteImport } from './routes/leadership.$leaderId'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
 
@@ -96,6 +97,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TherthalVakkuruthiRoute = TherthalVakkuruthiRouteImport.update({
+  id: '/therthal-vakkuruthi',
+  path: '/therthal-vakkuruthi',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LeadershipLeaderIdRoute = LeadershipLeaderIdRouteImport.update({
   id: '/$leaderId',
   path: '/$leaderId',
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/press-releases': typeof PressReleasesRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/therthal-vakkuruthi': typeof TherthalVakkuruthiRoute
   '/leadership/$leaderId': typeof LeadershipLeaderIdRoute
   '/news/$slug': typeof NewsSlugRoute
 }
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/press-releases': typeof PressReleasesRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/therthal-vakkuruthi': typeof TherthalVakkuruthiRoute
   '/leadership/$leaderId': typeof LeadershipLeaderIdRoute
   '/news/$slug': typeof NewsSlugRoute
 }
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/press-releases': typeof PressReleasesRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/therthal-vakkuruthi': typeof TherthalVakkuruthiRoute
   '/leadership/$leaderId': typeof LeadershipLeaderIdRoute
   '/news/$slug': typeof NewsSlugRoute
 }
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/press-releases'
     | '/privacy'
     | '/terms'
+    | '/therthal-vakkuruthi'
     | '/leadership/$leaderId'
     | '/news/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/press-releases'
     | '/privacy'
     | '/terms'
+    | '/therthal-vakkuruthi'
     | '/leadership/$leaderId'
     | '/news/$slug'
   id:
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/press-releases'
     | '/privacy'
     | '/terms'
+    | '/therthal-vakkuruthi'
     | '/leadership/$leaderId'
     | '/news/$slug'
   fileRoutesById: FileRoutesById
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   PressReleasesRoute: typeof PressReleasesRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
+  TherthalVakkuruthiRoute: typeof TherthalVakkuruthiRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -336,6 +349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/therthal-vakkuruthi': {
+      id: '/therthal-vakkuruthi'
+      path: '/therthal-vakkuruthi'
+      fullPath: '/therthal-vakkuruthi'
+      preLoaderRoute: typeof TherthalVakkuruthiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/leadership/$leaderId': {
       id: '/leadership/$leaderId'
       path: '/$leaderId'
@@ -390,6 +410,7 @@ const rootRouteChildren: RootRouteChildren = {
   PressReleasesRoute: PressReleasesRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
+  TherthalVakkuruthiRoute: TherthalVakkuruthiRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
