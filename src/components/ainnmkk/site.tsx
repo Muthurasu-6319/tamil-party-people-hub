@@ -796,109 +796,38 @@ export function SiteFooter() {
 
 export function HomePage() {
   const { language } = useSiteLanguage();
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  const heroSlides = [
-    {
-      src: "/hero-banner.jpg",
-      alt: "மக்களுக்காக... மக்களுடன்... என்னூறும்... | அகில இந்திய நமது மக்கள் கட்சி",
-    },
-    {
-      src: "/hero-banner-2.jpg",
-      alt: "விவசாயியின் வாழ்வே நாட்டின் வாழ்வு | விவசாயிகளின் நலனுக்காக — அகில இந்திய நம் நாடு மக்கள் கட்சி",
-    },
-    {
-      src: "/hero-banner-3.jpg",
-      alt: "மக்கள் நலனே எங்கள் இலக்கு... நாம் சேர்ந்து நாம் வளர்வோம்! — அகில இந்திய நம் நாடு மக்கள் கட்சி",
-    },
-  ];
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [heroSlides.length]);
 
   return (
     <>
       <SiteHeader />
       <main className="w-full max-w-full overflow-x-hidden">
         {/* =========================================================================
-            HERO BANNER SECTION - 2-SLIDE CAROUSEL
+            HERO BANNER SECTION - SINGLE OFFICIAL BANNER
             ========================================================================= */}
         <section className="relative w-full overflow-hidden bg-white border-b border-slate-200">
           <div className="relative w-full">
-            <div
-              className="flex transition-transform duration-700 ease-out"
-              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-            >
-              {heroSlides.map((slide, idx) => (
-                <div key={slide.src} className="w-full shrink-0 relative">
-                  <img
-                    src={slide.src}
-                    alt={slide.alt}
-                    className="w-full h-auto block select-none"
-                  />
+            <img
+              src="/hero-banner.jpg"
+              alt="மக்களுக்காக... மக்களுடன்... என்னூறும்... | அகில இந்திய நம் நாடு மக்கள் கட்சி"
+              className="w-full h-auto block select-none"
+            />
 
-                  {/* Overlaid Action Buttons on Slide 1 only (keeps Slide 2 farmer icons unobstructed) */}
-                  {idx === 0 && (
-                    <div className="absolute left-[24%] sm:left-[25%] bottom-[15%] sm:bottom-[18%] z-10 hidden sm:flex flex-wrap items-center gap-2 sm:gap-3.5">
-                      <Link
-                        to="/about"
-                        className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-[#12883c] hover:bg-[#0e6e30] px-4 py-2 md:px-6 md:py-2.5 text-xs md:text-sm font-bold text-white shadow-lg shadow-emerald-950/25 transition-all hover:scale-105 active:scale-95"
-                      >
-                        <span>எங்கள் கட்சியை பற்றி</span>
-                        <ArrowRight className="size-3.5 sm:size-4" />
-                      </Link>
-                      <Link
-                        to="/news"
-                        className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-white hover:bg-slate-50 px-4 py-2 md:px-6 md:py-2.5 text-xs md:text-sm font-bold text-slate-800 shadow-lg shadow-slate-900/15 border border-slate-200/90 transition-all hover:scale-105 active:scale-95"
-                      >
-                        <span>செய்திகளை பார்க்க</span>
-                        <ArrowRight className="size-3.5 sm:size-4" />
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Carousel Navigation Chevrons */}
-            <button
-              type="button"
-              onClick={() =>
-                setCurrentSlide((prev) => (prev > 0 ? prev - 1 : heroSlides.length - 1))
-              }
-              aria-label="Previous Slide"
-              className="absolute left-2.5 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 z-10 size-7 sm:size-9 md:size-10 rounded-full bg-slate-900/60 hover:bg-slate-900/80 text-white flex items-center justify-center backdrop-blur-xs transition-colors shadow-md"
-            >
-              <ChevronLeft className="size-4 sm:size-5 md:size-6" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentSlide((prev) => (prev + 1) % heroSlides.length)}
-              aria-label="Next Slide"
-              className="absolute right-2.5 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-10 size-7 sm:size-9 md:size-10 rounded-full bg-slate-900/60 hover:bg-slate-900/80 text-white flex items-center justify-center backdrop-blur-xs transition-colors shadow-md"
-            >
-              <ChevronRight className="size-4 sm:size-5 md:size-6" />
-            </button>
-
-            {/* Carousel Indicator Dots */}
-            <div className="absolute bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 sm:gap-2">
-              {heroSlides.map((slide, idx) => (
-                <button
-                  key={slide.src}
-                  type="button"
-                  onClick={() => setCurrentSlide(idx)}
-                  aria-label={`Go to slide ${idx + 1}`}
-                  className={`transition-all ${
-                    currentSlide === idx
-                      ? "h-1.5 sm:h-2 w-5 sm:w-7 rounded-full bg-white shadow-xs"
-                      : "size-1.5 sm:size-2 rounded-full bg-white/60 hover:bg-white"
-                  }`}
-                />
-              ))}
+            {/* Overlaid Action Buttons (Placed in the open paddy field area below the slogan) */}
+            <div className="absolute left-[24%] sm:left-[25%] bottom-[15%] sm:bottom-[18%] z-10 hidden sm:flex flex-wrap items-center gap-2 sm:gap-3.5">
+              <Link
+                to="/about"
+                className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-[#12883c] hover:bg-[#0e6e30] px-4 py-2 md:px-6 md:py-2.5 text-xs md:text-sm font-bold text-white shadow-lg shadow-emerald-950/25 transition-all hover:scale-105 active:scale-95"
+              >
+                <span>எங்கள் கட்சியை பற்றி</span>
+                <ArrowRight className="size-3.5 sm:size-4" />
+              </Link>
+              <Link
+                to="/news"
+                className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-white hover:bg-slate-50 px-4 py-2 md:px-6 md:py-2.5 text-xs md:text-sm font-bold text-slate-800 shadow-lg shadow-slate-900/15 border border-slate-200/90 transition-all hover:scale-105 active:scale-95"
+              >
+                <span>செய்திகளை பார்க்க</span>
+                <ArrowRight className="size-3.5 sm:size-4" />
+              </Link>
             </div>
           </div>
         </section>
